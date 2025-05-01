@@ -1,22 +1,53 @@
-﻿// vulkan_guide.h : Include file for standard system include files,
-// or project specific include files.
-//> intro
-#pragma once
+﻿#pragma once
+#include <vulkan/vulkan.h>
+#include <vector>
 
+
+#ifdef NDEBUG
+const bool enableValidationLayers = false;
+#else
+const bool enableValidationLayers = true;
+#endif
 
 class VulkanEngine {
 public:
+	//run main loop
+	void run();
 
-	bool _isInitialized{ false };
-	int _frameNumber {0};
+private:
+	static VulkanEngine& Get();
+
+	//Vulkan
+	VkInstance vkInstance;
+	VkPhysicalDevice vkPhysicalDevice;
+	VkDevice vkDevice;
+
+	//Selected Validation Layer
+	const std::vector<const char*> validationLayers = {
+	"VK_LAYER_KHRONOS_validation"
+	};
+
+
+
+	// SDL
+	struct SDL_Window* window{ nullptr };
+	bool isWindowInitialized{ false };
+	int frameNumber {0};
 	bool stop_rendering{ false };
 
-	struct SDL_Window* _window{ nullptr };
-
-	static VulkanEngine& Get();
 
 	//initializes everything in the engine
 	void init();
+	void initWindow();
+	
+
+	//Vulkan
+	void initVulkan();
+	void createInstance();
+	void createPhysDevice();
+	void createDevice();
+
+	bool checkValidationLayerSupport();
 
 	//shuts down the engine
 	void cleanup();
@@ -24,7 +55,6 @@ public:
 	//draw loop
 	void draw();
 
-	//run main loop
-	void run();
+	
 };
 //< intro

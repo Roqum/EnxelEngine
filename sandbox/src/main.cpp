@@ -4,13 +4,9 @@
 
 int main(int argc, char* argv[])
 {
-	VulkanEngine engine;
+	VulkanEngine graphicsEngine;
 
-	engine.init();
-
-	engine.run();
-
-	engine.cleanup();
+	graphicsEngine.run();
 
 	return 0;
 }

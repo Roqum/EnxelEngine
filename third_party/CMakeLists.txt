@@ -1,3 +1,2 @@
-add_library(glm INTERFACE)
-
-target_include_directories(glm INTERFACE glm)
+add_subdirectory(SDL EXCLUDE_FROM_ALL)
+add_subdirectory(glm INTERFACE)
