@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <vulkan/vulkan.h>
 #include <vector>
+#include <optional>
 
 
 #ifdef NDEBUG
@@ -8,6 +9,14 @@ const bool enableValidationLayers = false;
 #else
 const bool enableValidationLayers = true;
 #endif
+
+struct QueueFamilyIndices {
+	std::optional<uint32_t> graphicsFamily;
+
+	bool isComplete() {
+		return graphicsFamily.has_value();
+	}
+};
 
 class VulkanEngine {
 public:
@@ -19,9 +28,11 @@ private:
 
 	//Vulkan
 	VkInstance vkInstance;
-	VkPhysicalDevice vkPhysicalDevice;
+	VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
 	VkDevice vkDevice;
+	VkQueue vkGraphicsQueue;
 
+	
 	//Selected Validation Layer
 	const std::vector<const char*> validationLayers = {
 	"VK_LAYER_KHRONOS_validation"
@@ -44,8 +55,11 @@ private:
 	//Vulkan
 	void initVulkan();
 	void createInstance();
-	void createPhysDevice();
-	void createDevice();
+	void pickPhysicalDevice();
+	bool isDeviceSuitable(VkPhysicalDevice device);
+	void createLogicalDevice();
+	
+	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
 	bool checkValidationLayerSupport();
 

@@ -4,6 +4,8 @@
 #include <chrono>
 #include <thread>
 #include <cstring>
+#include <optional>
+
 #include <SDL3/SDL.h>
 
 
@@ -29,6 +31,7 @@ void VulkanEngine::cleanup()
     loadedEngine = nullptr;
 
     // Cleanup vulkan
+    vkDestroyDevice(vkDevice, nullptr);
     vkDestroyInstance(vkInstance, nullptr);
 }
 
@@ -56,6 +59,8 @@ void VulkanEngine::initWindow()
 void VulkanEngine::initVulkan()
 {
     createInstance();
+    pickPhysicalDevice();
+    createLogicalDevice();
 }
 
 void VulkanEngine::createInstance()
@@ -73,17 +78,17 @@ void VulkanEngine::createInstance()
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.apiVersion = VK_API_VERSION_1_0;
 
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
+    VkInstanceCreateInfo createInstanceInfo{};
+    createInstanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInstanceInfo.pApplicationInfo = &appInfo;
 
     // Add validation layer
     if (enableValidationLayers) {
-        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        createInfo.ppEnabledLayerNames = validationLayers.data();
+        createInstanceInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInstanceInfo.ppEnabledLayerNames = validationLayers.data();
     }
     else {
-        createInfo.enabledLayerCount = 0;
+        createInstanceInfo.enabledLayerCount = 0;
     }
 
 
@@ -92,22 +97,106 @@ void VulkanEngine::createInstance()
     std::vector<VkExtensionProperties> extensions(extensionCount);
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
-    if (vkCreateInstance(&createInfo, nullptr, &vkInstance) != VK_SUCCESS) {
+    if (vkCreateInstance(&createInstanceInfo, nullptr, &vkInstance) != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
 }
 
-void VulkanEngine::createPhysDevice()
+void VulkanEngine::pickPhysicalDevice()
 {
-    uint32_t physicalDeviceCount = 0;
-    VkPhysicalDevice physicalDevices;
-    if (vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, &physicalDevices) != VK_SUCCESS)
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(vkInstance, &deviceCount, nullptr);
+
+    if (deviceCount == 0) {
+        throw std::runtime_error("failed to find GPUs with Vulkan support!");
+    }
+
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    if (vkEnumeratePhysicalDevices(vkInstance, &deviceCount, devices.data()) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create vulkan physical device!");
     }
+
+    for (const auto& device : devices) {
+        if (isDeviceSuitable(device)) {
+            vkPhysicalDevice = device;
+            break;
+        }
+    }
+
+    if (vkPhysicalDevice == VK_NULL_HANDLE) {
+        throw std::runtime_error("failed to find a suitable GPU!");
+    }
 }
-void VulkanEngine::createDevice()
+
+bool VulkanEngine::isDeviceSuitable(VkPhysicalDevice device) 
 {
+    QueueFamilyIndices indices = findQueueFamilies(device);
+    return indices.isComplete();;
+}
+
+void VulkanEngine::createLogicalDevice()
+{
+    QueueFamilyIndices indices = findQueueFamilies(vkPhysicalDevice);
+
+    VkDeviceQueueCreateInfo queueCreateInfo{};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+    queueCreateInfo.queueCount = 1;
+
+    float queuePriority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures deviceFeatures{};
+
+    VkDeviceCreateInfo deviceCreateInfo{};
+    deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+    deviceCreateInfo.queueCreateInfoCount = 1;
+
+    deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+
+    deviceCreateInfo.enabledExtensionCount = 0;
+
+    if (enableValidationLayers) {
+        deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
+    }
+    else {
+        deviceCreateInfo.enabledLayerCount = 0;
+    }
+
+    if (vkCreateDevice(vkPhysicalDevice, &deviceCreateInfo, nullptr, &vkDevice) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create logical device!");
+    }
+
+    vkGetDeviceQueue(vkDevice, indices.graphicsFamily.value(), 0, &vkGraphicsQueue);
+
+}
+
+QueueFamilyIndices VulkanEngine::findQueueFamilies(VkPhysicalDevice device)
+{
+
+    QueueFamilyIndices queueIndices;
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+    
+    int i = 0;
+    for (const auto& queueFamily : queueFamilies) {
+        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            queueIndices.graphicsFamily = i;
+        }
+        if (queueIndices.isComplete()) {
+            break;
+        }
+        i++;
+    }
+
+    return queueIndices;
+
 }
 
 bool VulkanEngine::checkValidationLayerSupport()
