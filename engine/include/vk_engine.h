@@ -10,6 +10,13 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+struct VkFrameData {
+
+	VkCommandPool vkCommandPool;
+	VkCommandBuffer vkMainCommandBuffer;
+};
+
+constexpr unsigned int FRAME_OVERLAP = 2;
 
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
@@ -51,6 +58,12 @@ private:
 	std::vector<VkImage> vkSwapChainImages;
 	std::vector<VkImageView> vkSwapChainImageViews;
 
+	VkPipelineLayout vkPipelineLayout;
+
+	//VkFrameData frames[FRAME_OVERLAP];
+
+	//VkFrameData& getCurrentFrame() { return frames[frameNumber % FRAME_OVERLAP]; };
+
 	const std::vector<const char*> requiredDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 	
 	//Selected Validation Layer
@@ -77,6 +90,9 @@ private:
 	void createLogicalDevice();
 	void createSwapChain();
 	void createImageViews();
+	void createGraphicsPipeline();
+
+	VkShaderModule createShaderModule(const std::vector<char>& byteCode);
 
 	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
