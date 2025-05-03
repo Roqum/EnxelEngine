@@ -10,6 +10,7 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
 	std::optional<uint32_t> presentFamily;
@@ -17,6 +18,12 @@ struct QueueFamilyIndices {
 	bool isComplete() {
 		return graphicsFamily.has_value() && presentFamily.has_value();
 	}
+};
+
+struct SwapChainSupportDetails {
+	VkSurfaceCapabilitiesKHR capabilities;
+	std::vector<VkSurfaceFormatKHR> formats;
+	std::vector<VkPresentModeKHR> presentModes;
 };
 
 class VulkanEngine {
@@ -27,6 +34,9 @@ public:
 private:
 	static VulkanEngine& Get();
 
+	int windowHeight;
+	int windowWidth;
+
 	//Vulkan
 	VkInstance vkInstance;
 	VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
@@ -35,14 +45,16 @@ private:
 	VkQueue vkPresentQueue;
 	VkSurfaceKHR vkSurface;
 
+	VkFormat vkSwapChainImageFormat;
+	VkExtent2D vkSwapChainExtent;
+	VkSwapchainKHR vkSwapChain;
+	std::vector<VkImage> vkSwapChainImages;
+	std::vector<VkImageView> vkSwapChainImageViews;
 
+	const std::vector<const char*> requiredDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 	
 	//Selected Validation Layer
-	const std::vector<const char*> validationLayers = {
-	"VK_LAYER_KHRONOS_validation"
-	};
-
-
+	const std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
 	// SDL
 	struct SDL_Window* window{ nullptr };
@@ -58,13 +70,22 @@ private:
 
 	//Vulkan
 	void initVulkan();
+	
 	void createInstance();
 	void createSurface();
 	void pickPhysicalDevice();
 	void createLogicalDevice();
-	
+	void createSwapChain();
+	void createImageViews();
+
+	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
 	bool isDeviceSuitable(VkPhysicalDevice device);
+	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
 	bool checkValidationLayerSupport();
 
