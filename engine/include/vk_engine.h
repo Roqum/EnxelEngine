@@ -57,7 +57,9 @@ private:
 	VkSwapchainKHR vkSwapChain;
 	std::vector<VkImage> vkSwapChainImages;
 	std::vector<VkImageView> vkSwapChainImageViews;
-
+	
+	VkPipeline vkGraphicsPipeline;
+	VkRenderPass vkRenderPass;
 	VkPipelineLayout vkPipelineLayout;
 
 	//VkFrameData frames[FRAME_OVERLAP];
@@ -90,6 +92,7 @@ private:
 	void createLogicalDevice();
 	void createSwapChain();
 	void createImageViews();
+	void createRenderPass();
 	void createGraphicsPipeline();
 
 	VkShaderModule createShaderModule(const std::vector<char>& byteCode);
