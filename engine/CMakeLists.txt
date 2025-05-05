@@ -2,7 +2,7 @@ file(GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS src/*.cpp include/*.h)
 
 # Add shader directory path
 set(SHADER_DIR src/shaders)
-set(SHADER_OUTPUT_DIR ${CMAKE_BINARY_DIR}/shaders)
+set(SHADER_OUTPUT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders)
 
 # Copy shaders at build time
 file(GLOB SHADER_FILES "${SHADER_DIR}/*.*")

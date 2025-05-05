@@ -12,7 +12,6 @@ const bool enableValidationLayers = true;
 
 struct VkFrameData {
 
-	VkCommandPool vkCommandPool;
 	VkCommandBuffer vkMainCommandBuffer;
 };
 
@@ -57,6 +56,11 @@ private:
 	VkSwapchainKHR vkSwapChain;
 	std::vector<VkImage> vkSwapChainImages;
 	std::vector<VkImageView> vkSwapChainImageViews;
+	std::vector<VkFramebuffer> vkSwapChainFramebuffers;
+	VkCommandPool vkCommandPool;
+	VkCommandBuffer vkCommandBuffer;
+
+
 	
 	VkPipeline vkGraphicsPipeline;
 	VkRenderPass vkRenderPass;
@@ -94,6 +98,10 @@ private:
 	void createImageViews();
 	void createRenderPass();
 	void createGraphicsPipeline();
+	void createFramebuffers();
+	void createCommandPool();
+	void createCommandBuffer();
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 	VkShaderModule createShaderModule(const std::vector<char>& byteCode);
 
