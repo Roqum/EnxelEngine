@@ -10,12 +10,15 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-struct VkFrameData {
-
-	VkCommandBuffer vkMainCommandBuffer;
-};
-
 constexpr unsigned int FRAME_OVERLAP = 2;
+struct VkFrameData
+{
+	VkCommandPool vkCommandPool;
+	VkCommandBuffer vkMainCommandBuffer;
+	VkSemaphore vkImageAvailableSemaphore;
+	VkSemaphore vkRenderFinishedSemaphore;
+	VkFence vkInFlightFence;
+};
 
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
@@ -57,18 +60,24 @@ private:
 	std::vector<VkImage> vkSwapChainImages;
 	std::vector<VkImageView> vkSwapChainImageViews;
 	std::vector<VkFramebuffer> vkSwapChainFramebuffers;
-	VkCommandPool vkCommandPool;
-	VkCommandBuffer vkCommandBuffer;
-
-
 	
 	VkPipeline vkGraphicsPipeline;
 	VkRenderPass vkRenderPass;
 	VkPipelineLayout vkPipelineLayout;
+	VkCommandPool vkCommandPool;
 
-	//VkFrameData frames[FRAME_OVERLAP];
+	//VkCommandBuffer vkCommandBuffer;
+	//VkSemaphore vkImageAvailableSemaphore;
+	//VkSemaphore vkRenderFinishedSemaphore;
+	//VkFence vkInFlightFence;
 
-	//VkFrameData& getCurrentFrame() { return frames[frameNumber % FRAME_OVERLAP]; };
+	VkFrameData vkFrames[FRAME_OVERLAP];
+	uint32_t currentFrame = 0;
+
+	std::vector<VkCommandBuffer> vkCommandBuffers;
+	std::vector<VkSemaphore> vkImageAvailableSemaphores;
+	std::vector<VkSemaphore> vkRenderFinishedSemaphores;
+	std::vector<VkFence> vkInFlightFences;
 
 	const std::vector<const char*> requiredDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 	
@@ -99,8 +108,9 @@ private:
 	void createRenderPass();
 	void createGraphicsPipeline();
 	void createFramebuffers();
-	void createCommandPool();
-	void createCommandBuffer();
+	void createCommandStructure();
+	void createSyncObjects();
+
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 	VkShaderModule createShaderModule(const std::vector<char>& byteCode);
