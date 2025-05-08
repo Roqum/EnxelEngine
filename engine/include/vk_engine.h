@@ -49,6 +49,10 @@ const std::vector<Vertex> vertices = {
 	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
 };
 
+const std::vector<uint16_t> indices = {
+	0, 1, 2, 2, 3, 0
+};
+
 constexpr unsigned int FRAME_OVERLAP = 2;
 struct VkFrameData
 {
@@ -107,6 +111,8 @@ private:
 
 	VkBuffer vkVertexBuffer;
 	VkDeviceMemory vkVertexBufferMemory;
+	VkBuffer vkIndexBuffer;
+	VkDeviceMemory vkIndexBufferMemory;
 
 
 	//VkCommandBuffer vkCommandBuffer;
@@ -141,6 +147,7 @@ private:
 
 	//Vulkan
 	void initVulkan();
+
 	
 	void createInstance();
 	void createSurface();
@@ -153,10 +160,14 @@ private:
 	void createFramebuffers();
 	void createCommandStructure();
 	void createVertexBuffer();
+	void createIndexBuffer();
 
 	void createSyncObjects();
 
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
 
 	VkShaderModule createShaderModule(const std::vector<char>& byteCode);
 
