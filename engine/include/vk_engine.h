@@ -66,6 +66,7 @@ struct VkFrameData
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
 	std::optional<uint32_t> presentFamily;
+	std::optional<uint32_t> transferFamily;
 
 	bool isComplete() {
 		return graphicsFamily.has_value() && presentFamily.has_value();
@@ -104,10 +105,11 @@ private:
 	std::vector<VkImageView> vkSwapChainImageViews;
 	std::vector<VkFramebuffer> vkSwapChainFramebuffers;
 	
-	VkPipeline vkGraphicsPipeline;
-	VkRenderPass vkRenderPass;
-	VkPipelineLayout vkPipelineLayout;
-	VkCommandPool vkCommandPool;
+	VkPipeline vkGraphicsPipeline; //old
+	VkRenderPass vkRenderPass; // old
+	VkPipelineLayout vkPipelineLayout; //old
+
+	VkCommandPool vkTransferCommandPool;
 
 	VkBuffer vkVertexBuffer;
 	VkDeviceMemory vkVertexBufferMemory;

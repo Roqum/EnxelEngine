@@ -170,11 +170,14 @@ void VulkanEngine::initVulkan()
 }
 
 void VulkanEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+    //std::array<uint32_t, 2 = ""> allowedQueueIndices{ graphicsQueueIndex, transferQueueIndex };
+
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    //bufferInfo.queueFamilyIndexCount = std::size(vkQueue);
     bufferInfo.size = size;
     bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
 
     if (vkCreateBuffer(vkDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
@@ -218,7 +221,7 @@ void VulkanEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = vkCommandPool;
+    allocInfo.commandPool = vkTransferCommandPool;
     allocInfo.commandBufferCount = 1;
 
     VkCommandBuffer commandBuffer;
@@ -246,7 +249,7 @@ void VulkanEngine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
     vkQueueSubmit(vkGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
     vkQueueWaitIdle(vkGraphicsQueue);
 
-    vkFreeCommandBuffers(vkDevice, vkCommandPool, 1, &commandBuffer);
+    vkFreeCommandBuffers(vkDevice, vkTransferCommandPool, 1, &commandBuffer);
 
 }
 void VulkanEngine::createIndexBuffer()
@@ -621,6 +624,17 @@ void VulkanEngine::createCommandStructure()
             throw std::runtime_error("failed to allocate command buffers!");
         }
     }
+
+    VkCommandPoolCreateInfo transferPoolInfo{};
+    transferPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    transferPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    transferPoolInfo.pNext = nullptr;
+    transferPoolInfo.queueFamilyIndex = queueFamilyIndices.transferFamily.value();
+
+    if (vkCreateCommandPool(vkDevice, &poolInfo, nullptr, &vkTransferCommandPool) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create command pool!");
+    }
+
 }
 
 void VulkanEngine::createSyncObjects()
@@ -871,7 +885,7 @@ void VulkanEngine::createLogicalDevice()
     QueueFamilyIndices indices = findQueueFamilies(vkPhysicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfosVec{};
-    std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+    std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value(), indices.transferFamily.value() };
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -925,6 +939,9 @@ QueueFamilyIndices VulkanEngine::findQueueFamilies(VkPhysicalDevice device)
     for (const auto& queueFamily : queueFamilies) {
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             queueIndices.graphicsFamily = i;
+        }
+        if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) {
+            queueIndices.transferFamily = i;
         }
         VkBool32 presentSupport = false;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, vkSurface, &presentSupport);
