@@ -94,8 +94,10 @@ private:
 	VkInstance vkInstance;
 	VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
 	VkDevice vkDevice;
+	QueueFamilyIndices vkQueueFamilyIndicies;
 	VkQueue vkGraphicsQueue;
 	VkQueue vkPresentQueue;
+	VkQueue vkTransferQueue;
 	VkSurfaceKHR vkSurface;
 
 	VkFormat vkSwapChainImageFormat;

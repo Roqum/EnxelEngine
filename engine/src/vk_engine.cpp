@@ -172,12 +172,23 @@ void VulkanEngine::initVulkan()
 void VulkanEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
     //std::array<uint32_t, 2 = ""> allowedQueueIndices{ graphicsQueueIndex, transferQueueIndex };
 
+
     VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    //bufferInfo.queueFamilyIndexCount = std::size(vkQueue);
+    if (vkQueueFamilyIndicies.graphicsFamily != vkQueueFamilyIndicies.transferFamily) {
+        std::vector<uint32_t> sharingIndices;
+        sharingIndices = { vkQueueFamilyIndicies.graphicsFamily.value(), vkQueueFamilyIndicies.transferFamily.value() };
+        bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+        bufferInfo.queueFamilyIndexCount = 2;
+        bufferInfo.pQueueFamilyIndices = sharingIndices.data();
+    }
+    else {
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
+
     bufferInfo.size = size;
     bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    
 
     if (vkCreateBuffer(vkDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
@@ -315,10 +326,9 @@ void VulkanEngine::createSwapChain() {
     swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 
-    QueueFamilyIndices indices = findQueueFamilies(vkPhysicalDevice);
-    uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+    uint32_t queueFamilyIndices[] = { vkQueueFamilyIndicies.graphicsFamily.value(), vkQueueFamilyIndicies.presentFamily.value() };
 
-    if (indices.graphicsFamily != indices.presentFamily) {
+    if (vkQueueFamilyIndicies.graphicsFamily != vkQueueFamilyIndicies.presentFamily) {
         swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         swapchainCreateInfo.queueFamilyIndexCount = 2;
         swapchainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
@@ -599,13 +609,12 @@ void VulkanEngine::createFramebuffers()
 
 void VulkanEngine::createCommandStructure()
 {
-    QueueFamilyIndices queueFamilyIndices = findQueueFamilies(vkPhysicalDevice);
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolInfo.pNext = nullptr;
-    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+    poolInfo.queueFamilyIndex = vkQueueFamilyIndicies.graphicsFamily.value();
 
     for (size_t i = 0; i < FRAME_OVERLAP; i++)
     {
@@ -629,7 +638,7 @@ void VulkanEngine::createCommandStructure()
     transferPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     transferPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     transferPoolInfo.pNext = nullptr;
-    transferPoolInfo.queueFamilyIndex = queueFamilyIndices.transferFamily.value();
+    transferPoolInfo.queueFamilyIndex = vkQueueFamilyIndicies.transferFamily.value();
 
     if (vkCreateCommandPool(vkDevice, &poolInfo, nullptr, &vkTransferCommandPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create command pool!");
@@ -882,10 +891,10 @@ bool VulkanEngine::checkDeviceExtensionSupport(VkPhysicalDevice device)
 
 void VulkanEngine::createLogicalDevice()
 {
-    QueueFamilyIndices indices = findQueueFamilies(vkPhysicalDevice);
+    vkQueueFamilyIndicies = findQueueFamilies(vkPhysicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfosVec{};
-    std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value(), indices.transferFamily.value() };
+    std::set<uint32_t> uniqueQueueFamilies = { vkQueueFamilyIndicies.graphicsFamily.value(), vkQueueFamilyIndicies.presentFamily.value(), vkQueueFamilyIndicies.transferFamily.value() };
 
     float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies) {
@@ -918,8 +927,10 @@ void VulkanEngine::createLogicalDevice()
     if (vkCreateDevice(vkPhysicalDevice, &deviceCreateInfo, nullptr, &vkDevice) != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
-    vkGetDeviceQueue(vkDevice, indices.graphicsFamily.value(), 0, &vkGraphicsQueue);
-    vkGetDeviceQueue(vkDevice, indices.presentFamily.value(), 0, &vkPresentQueue);
+    vkGetDeviceQueue(vkDevice, vkQueueFamilyIndicies.graphicsFamily.value(), 0, &vkGraphicsQueue);
+    vkGetDeviceQueue(vkDevice, vkQueueFamilyIndicies.presentFamily.value(), 0, &vkPresentQueue);
+    vkGetDeviceQueue(vkDevice, vkQueueFamilyIndicies.transferFamily.value(), 0, &vkTransferQueue);
+
 
 }
 
