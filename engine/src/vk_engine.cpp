@@ -59,7 +59,6 @@ void VulkanEngine::cleanup()
     for (auto imageView : vkSwapChainImageViews) {
         vkDestroyImageView(vkDevice, imageView, nullptr);
     }
-
     vkDestroySwapchainKHR(vkDevice, vkSwapChain, nullptr);
 
     vkDestroyPipeline(vkDevice, vkGraphicsPipeline, nullptr);
@@ -165,6 +164,7 @@ void VulkanEngine::initVulkan()
     createFramebuffers();
     createCommandStructure();
     createVertexBuffer();
+    createIndexBuffer();
 
     createSyncObjects();
 }
