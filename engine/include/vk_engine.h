@@ -14,7 +14,7 @@ const bool enableValidationLayers = true;
 #endif
 
 struct Vertex {
-	glm::vec2 pos;
+	glm::vec3 pos;
 	glm::vec3 color;
 
 	static VkVertexInputBindingDescription getBindingDescription() {
@@ -31,7 +31,7 @@ struct Vertex {
 
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
 		attributeDescriptions[0].offset = offsetof(Vertex, pos);
 
 		attributeDescriptions[1].binding = 0;
@@ -43,19 +43,51 @@ struct Vertex {
 	}
 };
 
+struct UniformBufferObject {
+	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
+};
+
 const std::vector<Vertex> vertices = {
-	{{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-	{{0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
-	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	//Cube top face
+	{{ 0.5f,  0.5f, 0.f}, {0.0f, 0.0f, 0.0f}},
+	{{-0.5f,  0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
+	{{-0.5f, -0.5f, 0.f}, {1.0f, 1.0f, 1.0f}},
+	{{ 0.5f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
+
+	//Cube left face
+	{{0.5f, -0.5f, -1.f}, {0.0f, 1.0f, 0.0f}},
+	{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 0.0f}},
+
+	//Cube right face
+	//{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 1.0f}},
+	//{{0.5f, -0.5f, -1.f}, {0.0f, 0.0f, 1.0f}},
+
+	//Cube front face
+	//{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 1.0f}},
+	//{{0.5f, -0.5f, -1.f}, {0.0f, 0.0f, 1.0f}}
+
 };
 
 const std::vector<uint16_t> indices = {
-	0, 1, 2, 2, 3, 0
+	0, 1, 2, 0, 2, 3, //top
+	0, 5, 4, 0, 3, 4, //left
+	//2 ,1, 6, 1, 7, 6 //right
+	//1, //fromt
+	//down
+	//back
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
 struct VkFrameData
 {
+	VkBuffer vkUniformBuffers;
+	VkDeviceMemory vkUniformBuffersMemory;
+	void* vkUniformBuffersMapped;
+
+	VkDescriptorSet vkDescriptorSet;
+
 	VkCommandPool vkCommandPool;
 	VkCommandBuffer vkMainCommandBuffer;
 	VkSemaphore vkImageAvailableSemaphore;
@@ -107,9 +139,11 @@ private:
 	std::vector<VkImageView> vkSwapChainImageViews;
 	std::vector<VkFramebuffer> vkSwapChainFramebuffers;
 	
-	VkPipeline vkGraphicsPipeline; //old
-	VkRenderPass vkRenderPass; // old
-	VkPipelineLayout vkPipelineLayout; //old
+	VkDescriptorPool vkDescriptorPool;
+	VkDescriptorSetLayout vkDescriptorSetLayout;
+	VkPipeline vkGraphicsPipeline;
+	VkRenderPass vkRenderPass; 
+	VkPipelineLayout vkPipelineLayout;
 
 	VkCommandPool vkTransferCommandPool;
 
@@ -160,11 +194,15 @@ private:
 	void createSwapChain();
 	void createImageViews();
 	void createRenderPass();
+	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
 	void createFramebuffers();
 	void createCommandStructure();
 	void createVertexBuffer();
 	void createIndexBuffer();
+	void createUniformBuffers();
+	void createDescriptorPool();
+	void createDescriptorSets();
 
 	void createSyncObjects();
 
@@ -172,6 +210,7 @@ private:
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
+	void updateUniformBuffer(uint32_t currentImage);
 
 	VkShaderModule createShaderModule(const std::vector<char>& byteCode);
 
