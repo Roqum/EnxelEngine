@@ -78,6 +78,7 @@ void VulkanEngine::cleanup()
         vkDestroyFence(vkDevice, vkFrames[i].vkInFlightFence, nullptr);
         vkDestroyCommandPool(vkDevice, vkFrames[i].vkCommandPool, nullptr);
     }
+    vkDestroyCommandPool(vkDevice, vkTransferCommandPool, nullptr);
 
     vkDestroyDevice(vkDevice, nullptr);
 
@@ -220,8 +221,7 @@ void VulkanEngine::createVertexBuffer()
     memcpy(data, vertices.data(), (size_t)bufferSize);
     vkUnmapMemory(vkDevice, stagingBufferMemory);
 
-    createBuffer(bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vkVertexBuffer, vkVertexBufferMemory);
-    copyBuffer(stagingBuffer, vkVertexBuffer, bufferSize);
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vkVertexBuffer, vkVertexBufferMemory);    copyBuffer(stagingBuffer, vkVertexBuffer, bufferSize);
 
     vkDestroyBuffer(vkDevice, stagingBuffer, nullptr);
     vkFreeMemory(vkDevice, stagingBufferMemory, nullptr);
