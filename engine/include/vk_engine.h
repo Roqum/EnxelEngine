@@ -51,20 +51,20 @@ struct UniformBufferObject {
 
 const std::vector<Vertex> vertices = {
 	//Cube top face
-	{{ 0.5f,  0.5f, 0.f}, {0.0f, 0.0f, 0.0f}},
-	{{-0.5f,  0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
-	{{-0.5f, -0.5f, 0.f}, {1.0f, 1.0f, 1.0f}},
+	{{-0.5f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
 	{{ 0.5f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
+	{{ 0.5f,  0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
+	{{-0.5f,  0.5f, 0.f}, {1.0f, 1.0f, 0.0f}},
 
-	//Cube left face
-	{{0.5f, -0.5f, -1.f}, {0.0f, 1.0f, 0.0f}},
-	{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 0.0f}},
-
-	//Cube right face
-	//{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 1.0f}},
-	//{{0.5f, -0.5f, -1.f}, {0.0f, 0.0f, 1.0f}},
+	//Cube back face
+	{{-0.5f, -0.5f, -1.f}, {1.0f, 0.0f, 1.0f}},
+	{{-0.5f,  0.5f, -1.f}, {0.0f, 1.0f, 1.0f}},
 
 	//Cube front face
+	{{0.5f, -0.5f, -1.f}, {1.0f, 1.0f, 1.0f}},
+	{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 0.0f}},
+
+	//Cube left face
 	//{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 1.0f}},
 	//{{0.5f, -0.5f, -1.f}, {0.0f, 0.0f, 1.0f}}
 
@@ -72,11 +72,11 @@ const std::vector<Vertex> vertices = {
 
 const std::vector<uint16_t> indices = {
 	0, 1, 2, 0, 2, 3, //top
-	0, 5, 4, 0, 3, 4, //left
-	//2 ,1, 6, 1, 7, 6 //right
-	//1, //fromt
-	//down
-	//back
+	3, 4, 0, 3, 5, 4, //back
+	1, 6, 7, 1, 7, 2, //front
+	0, 6, 1, 0, 4, 6, //left
+	2, 7, 5, 2, 5, 3, //right
+	6, 4, 5, 6, 5, 7  //bottom
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
