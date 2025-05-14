@@ -1,8 +1,10 @@
 ﻿#pragma once
+#define STB_IMAGE_IMPLEMENTATION
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <vector>
 #include <array>
+#include <stb_image.h>
 
 #include <optional>
 
@@ -151,6 +153,14 @@ private:
 	VkDeviceMemory vkVertexBufferMemory;
 	VkBuffer vkIndexBuffer;
 	VkDeviceMemory vkIndexBufferMemory;
+	VkBuffer vkStagingBuffer;
+	VkDeviceMemory vkStagingBufferMemory;
+
+	VkImage vkTextureImage;
+	VkDeviceMemory vkTextureImageMemory;
+	VkImageView vkTextureImageView;
+	VkSampler vkTextureSampler;
+
 
 
 	//VkCommandBuffer vkCommandBuffer;
@@ -196,6 +206,9 @@ private:
 	void createRenderPass();
 	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
+	void createTextureImage();
+	void createTextureImageView();
+	void createTextureSampler();
 	void createFramebuffers();
 	void createCommandStructure();
 	void createVertexBuffer();
@@ -206,9 +219,16 @@ private:
 
 	void createSyncObjects();
 
+	VkCommandBuffer beginSingleTimeCommands();
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
 	void updateUniformBuffer(uint32_t currentImage);
 
