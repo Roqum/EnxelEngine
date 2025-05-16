@@ -1,10 +1,10 @@
 ﻿#pragma once
-#define STB_IMAGE_IMPLEMENTATION
+
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <vector>
 #include <array>
-#include <stb_image.h>
+
 
 #include <optional>
 
@@ -18,6 +18,8 @@ const bool enableValidationLayers = true;
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 color;
+	glm::vec2 texCoord;
+
 
 	static VkVertexInputBindingDescription getBindingDescription() {
 		VkVertexInputBindingDescription bindingDescription{};
@@ -28,8 +30,8 @@ struct Vertex {
 		return bindingDescription;
 	}
 
-	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+	static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
 		attributeDescriptions[0].binding = 0;
 		attributeDescriptions[0].location = 0;
@@ -40,6 +42,11 @@ struct Vertex {
 		attributeDescriptions[1].location = 1;
 		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
 		attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+		attributeDescriptions[2].binding = 0;
+		attributeDescriptions[2].location = 2;
+		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
 		return attributeDescriptions;
 	}
@@ -52,33 +59,50 @@ struct UniformBufferObject {
 };
 
 const std::vector<Vertex> vertices = {
-	//Cube top face
-	{{-0.5f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
-	{{ 0.5f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
-	{{ 0.5f,  0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
-	{{-0.5f,  0.5f, 0.f}, {1.0f, 1.0f, 0.0f}},
+	{{-0.5f, -0.5f,  0.5f}, {1, 0, 0}, {0.0f, 0.0f}}, // 0
+	{{ 0.5f, -0.5f,  0.5f}, {0, 1, 0}, {1.0f, 0.0f}}, // 1
+	{{ 0.5f,  0.5f,  0.5f}, {0, 0, 1}, {1.0f, 1.0f}}, // 2
+	{{-0.5f,  0.5f,  0.5f}, {1, 1, 0}, {0.0f, 1.0f}}, // 3
 
-	//Cube back face
-	{{-0.5f, -0.5f, -1.f}, {1.0f, 0.0f, 1.0f}},
-	{{-0.5f,  0.5f, -1.f}, {0.0f, 1.0f, 1.0f}},
+	// Back face
+	{{ 0.5f, -0.5f, -0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, // 4
+	{{-0.5f, -0.5f, -0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, // 5
+	{{-0.5f,  0.5f, -0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, // 6
+	{{ 0.5f,  0.5f, -0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, // 7
 
-	//Cube front face
-	{{0.5f, -0.5f, -1.f}, {1.0f, 1.0f, 1.0f}},
-	{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 0.0f}},
+	// Left face
+	{{-0.5f, -0.5f, -0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, // 8
+	{{-0.5f, -0.5f,  0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, // 9
+	{{-0.5f,  0.5f,  0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, //10
+	{{-0.5f,  0.5f, -0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, //11
 
-	//Cube left face
-	//{{0.5f,  0.5f, -1.f}, {0.0f, 0.0f, 1.0f}},
-	//{{0.5f, -0.5f, -1.f}, {0.0f, 0.0f, 1.0f}}
+	// Right face
+	{{ 0.5f, -0.5f,  0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, //12
+	{{ 0.5f, -0.5f, -0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, //13
+	{{ 0.5f,  0.5f, -0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, //14
+	{{ 0.5f,  0.5f,  0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, //15
+
+	// Top face
+	{{-0.5f,  0.5f,  0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, //16
+	{{ 0.5f,  0.5f,  0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, //17
+	{{ 0.5f,  0.5f, -0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, //18
+	{{-0.5f,  0.5f, -0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, //19
+
+	// Bottom face
+	{{-0.5f, -0.5f, -0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, //20
+	{{ 0.5f, -0.5f, -0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, //21
+	{{ 0.5f, -0.5f,  0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, //22
+	{{-0.5f, -0.5f,  0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, //23
 
 };
 
 const std::vector<uint16_t> indices = {
-	0, 1, 2, 0, 2, 3, //top
-	3, 4, 0, 3, 5, 4, //back
-	1, 6, 7, 1, 7, 2, //front
-	0, 6, 1, 0, 4, 6, //left
-	2, 7, 5, 2, 5, 3, //right
-	6, 4, 5, 6, 5, 7  //bottom
+	0, 1, 2, 2, 3, 0,       // Front face
+	4, 5, 6, 6, 7, 4,       // Back face
+	8, 9,10,10,11, 8,       // Left face
+   12,13,14,14,15,12,       // Right face
+   16,17,18,18,19,16,       // Top face
+   20,21,22,22,23,20        // Bottom face
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
