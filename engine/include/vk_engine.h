@@ -1,5 +1,6 @@
 ﻿#pragma once
-
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <vector>
@@ -185,6 +186,10 @@ private:
 	VkImageView vkTextureImageView;
 	VkSampler vkTextureSampler;
 
+	VkImage vkDepthImage;
+	VkDeviceMemory vkDepthImageMemory;
+	VkImageView vkDepthImageView;
+
 
 
 	//VkCommandBuffer vkCommandBuffer;
@@ -230,6 +235,7 @@ private:
 	void createRenderPass();
 	void createDescriptorSetLayout();
 	void createGraphicsPipeline();
+	void createDepthResources();
 	void createTextureImage();
 	void createTextureImageView();
 	void createTextureSampler();
@@ -243,6 +249,10 @@ private:
 
 	void createSyncObjects();
 
+	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+	VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+	VkFormat findDepthFormat();
+	bool hasStencilComponent(VkFormat format);
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 	void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
