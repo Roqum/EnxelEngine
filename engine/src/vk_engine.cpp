@@ -1508,6 +1508,13 @@ bool VulkanEngine::checkValidationLayerSupport()
     return true;
 }
 
+VulkanEngine::VulkanEngine()
+{
+    Chunk testChunk;
+    testChunk.generateTestPattern();
+    testChunk.generateMesh(vertices, indices);
+}
+
 void VulkanEngine::run()
 {
     init();
