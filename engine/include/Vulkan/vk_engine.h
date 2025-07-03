@@ -5,9 +5,9 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <array>
-
-
+#include <iostream> // Required for std::cout
 #include <optional>
+#include "Vulkan/Vertex.h"	
 
 
 #ifdef NDEBUG
@@ -16,173 +16,12 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-enum CubeFace {
-	TOP,
-	BOTTOM,
-	RIGHT,
-	LEFT,
-	BACK,
-	FRONT
-};
-struct Vertex {
-	glm::vec3 pos;
-	glm::vec3 color;
-	glm::vec2 texCoord;
-
-
-	static VkVertexInputBindingDescription getBindingDescription() {
-		VkVertexInputBindingDescription bindingDescription{};
-		bindingDescription.binding = 0;
-		bindingDescription.stride = sizeof(Vertex);
-		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-		return bindingDescription;
-	}
-
-	static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-		std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-
-		attributeDescriptions[0].binding = 0;
-		attributeDescriptions[0].location = 0;
-		attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-		attributeDescriptions[1].binding = 0;
-		attributeDescriptions[1].location = 1;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-		attributeDescriptions[2].binding = 0;
-		attributeDescriptions[2].location = 2;
-		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-		return attributeDescriptions;
-	}
-};
-
-
-struct Chunk {
-	const float CUBE_SIZE = 0.5f;
-	static const int CHUNK_SIZE = 2;
-
-	uint8_t blocks[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
-
-	Chunk() {
-		memset(blocks, 0, sizeof(blocks));
-	}
-
-	void generateTestPattern() {
-		for (int x = 0; x < CHUNK_SIZE; x++) {
-			for (int z = 0; z < CHUNK_SIZE; z++) {
-				//int height = (CHUNK_SIZE / 2) + sin(x * 0.5) * 2 + cos(z * 0.5) * 2;
-				for (int y = 0; y < CHUNK_SIZE; y++) {
-					blocks[x][z][y] = 1; 
-				}
-			}
-		}
-	}
-
-	void generateMesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
-	{
-		vertices.clear();
-		indices.clear();
-
-		for (int x = 0; x < CHUNK_SIZE; x++) {
-			for (int y = 0; y < CHUNK_SIZE; y++) {
-				for (int z = 0; z < CHUNK_SIZE; z++)
-				{
-					if (blocks[x][y][z] == 0)
-					{
-						continue;
-					}
-
-					addCubeFace(vertices, indices, x, y, z, CubeFace::TOP);
-					addCubeFace(vertices, indices, x, y, z, CubeFace::BOTTOM);
-					addCubeFace(vertices, indices, x, y, z, CubeFace::BACK);
-					addCubeFace(vertices, indices, x, y, z, CubeFace::FRONT);
-					addCubeFace(vertices, indices, x, y, z, CubeFace::LEFT);
-					addCubeFace(vertices, indices, x, y, z, CubeFace::RIGHT);
-
-				}
-			}
-		}
-	}
-	void addCubeFace(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int x, int y, int z, CubeFace cubeFace)
-	{
-		uint32_t lastIndex = vertices.size();
-		if (cubeFace == CubeFace::TOP)
-		{
-			vertices.push_back({{ (CUBE_SIZE), -CUBE_SIZE, ( -CUBE_SIZE)}, {1, 0, 1}, {0.0f, 0.0f} }); //16
-			vertices.push_back({{ (-CUBE_SIZE), -CUBE_SIZE, ( -CUBE_SIZE)}, {0, 1, 1}, {1.0f, 0.0f} }); //17
-			vertices.push_back({{ (-CUBE_SIZE), CUBE_SIZE,  (-CUBE_SIZE)}, {1, 1, 1}, {1.0f, 1.0f} }); //18
-			vertices.push_back({{ (CUBE_SIZE), CUBE_SIZE,  (-CUBE_SIZE)}, {0, 0, 0}, {0.0f, 1.0f} }); //19
-			
-			indices.push_back(lastIndex);
-			indices.push_back(lastIndex + 1);
-			indices.push_back(lastIndex + 2);
-			indices.push_back(lastIndex + 2);
-			indices.push_back(lastIndex + 3);
-			indices.push_back(lastIndex);
-		}
-		
-	}
-};
-
-
 struct UniformBufferObject {
 	alignas(16) glm::mat4 model;
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 proj;
 };
-/* Single Cube
-const std::vector<Vertex> vertices = {
-	{{-0.5f, -0.5f,  0.5f}, {1, 0, 0}, {0.0f, 0.0f}}, // 0
-	{{ 0.5f, -0.5f,  0.5f}, {0, 1, 0}, {1.0f, 0.0f}}, // 1
-	{{ 0.5f,  0.5f,  0.5f}, {0, 0, 1}, {1.0f, 1.0f}}, // 2
-	{{-0.5f,  0.5f,  0.5f}, {1, 1, 0}, {0.0f, 1.0f}}, // 3
 
-	// Back face
-	{{ 0.5f, -0.5f, -0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, // 4
-	{{-0.5f, -0.5f, -0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, // 5
-	{{-0.5f,  0.5f, -0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, // 6
-	{{ 0.5f,  0.5f, -0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, // 7
-
-	// Left face
-	{{-0.5f, -0.5f, -0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, // 8
-	{{-0.5f, -0.5f,  0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, // 9
-	{{-0.5f,  0.5f,  0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, //10
-	{{-0.5f,  0.5f, -0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, //11
-
-	// Right face
-	{{ 0.5f, -0.5f,  0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, //12
-	{{ 0.5f, -0.5f, -0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, //13
-	{{ 0.5f,  0.5f, -0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, //14
-	{{ 0.5f,  0.5f,  0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, //15
-
-	// Top face
-	{{-0.5f,  0.5f,  0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, //16
-	{{ 0.5f,  0.5f,  0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, //17
-	{{ 0.5f,  0.5f, -0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, //18
-	{{-0.5f,  0.5f, -0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, //19
-
-	// Bottom face
-	{{-0.5f, -0.5f, -0.5f}, {1, 0, 1}, {0.0f, 0.0f}}, //20
-	{{ 0.5f, -0.5f, -0.5f}, {0, 1, 1}, {1.0f, 0.0f}}, //21
-	{{ 0.5f, -0.5f,  0.5f}, {1, 1, 1}, {1.0f, 1.0f}}, //22
-	{{-0.5f, -0.5f,  0.5f}, {0, 0, 0}, {0.0f, 1.0f}}, //23
-
-};
-
-const std::vector<uint16_t> indices = {
-	0, 1, 2, 2, 3, 0,       // Front face
-	4, 5, 6, 6, 7, 4,       // Back face
-	8, 9,10,10,11, 8,       // Left face
-   12,13,14,14,15,12,       // Right face
-   16,17,18,18,19,16,       // Top face
-   20,21,22,22,23,20        // Bottom face
-};
-*/
 constexpr unsigned int FRAME_OVERLAP = 2;
 struct VkFrameData
 {

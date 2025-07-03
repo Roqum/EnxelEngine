@@ -1,7 +1,7 @@
 ﻿//> includes
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-#include "vk_engine.h"
+#include "Vulkan/stb_image.h"
+#include "Vulkan/vk_engine.h"
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -18,12 +18,11 @@
 #include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <algorithm>
 #include <chrono>
-
-
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
+#include "World/Terrain.h"
 
 static std::vector<char> readFile(const std::string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -205,24 +204,27 @@ void VulkanEngine::initVulkan()
 }
 
 void VulkanEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
-    //std::array<uint32_t, 2 = ""> allowedQueueIndices{ graphicsQueueIndex, transferQueueIndex };
-
-
     VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = usage;
+
+    std::vector<uint32_t> sharingIndices;
+
     if (vkQueueFamilyIndicies.graphicsFamily != vkQueueFamilyIndicies.transferFamily) {
-        std::vector<uint32_t> sharingIndices;
-        sharingIndices = { vkQueueFamilyIndicies.graphicsFamily.value(), vkQueueFamilyIndicies.transferFamily.value() };
+        sharingIndices = {
+            vkQueueFamilyIndicies.graphicsFamily.value(),
+            vkQueueFamilyIndicies.transferFamily.value()
+        };
         bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
-        bufferInfo.queueFamilyIndexCount = 2;
+        bufferInfo.queueFamilyIndexCount = static_cast<uint32_t>(sharingIndices.size());
         bufferInfo.pQueueFamilyIndices = sharingIndices.data();
     }
     else {
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        bufferInfo.queueFamilyIndexCount = 0;
+        bufferInfo.pQueueFamilyIndices = nullptr;
     }
-
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     
 
     if (vkCreateBuffer(vkDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
@@ -382,11 +384,11 @@ void VulkanEngine::updateUniformBuffer(uint32_t currentImage)
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
     UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(30.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.view = glm::lookAt(glm::vec3(60.0f, 60.0f, 60.0f), glm::vec3(16.0f, 16.0f, 16.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    ubo.proj = glm::perspective(glm::radians(45.0f), vkSwapChainExtent.width / (float)vkSwapChainExtent.height, 0.1f, 10.0f);
+    ubo.proj = glm::perspective(glm::radians(45.0f), vkSwapChainExtent.width / (float)vkSwapChainExtent.height, 0.1f, 100.0f);
 
     ubo.proj[1][1] *= -1;
 
@@ -704,10 +706,9 @@ void VulkanEngine::createDescriptorSetLayout()
 
 void VulkanEngine::createGraphicsPipeline()
 {
-    ;
     
-    auto vertShaderCode = readFile("shaders/vert.spv");
-    auto fragShaderCode = readFile("shaders/frag.spv");
+    auto vertShaderCode = readFile("./../engine/shaders/vert.spv");
+    auto fragShaderCode = readFile("./../engine/shaders/frag.spv");
 
     VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
     VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -726,8 +727,8 @@ void VulkanEngine::createGraphicsPipeline()
 
     VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+    auto bindingDescription = getBindingDescription();
+    auto attributeDescriptions = getAttributeDescriptions();
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -775,7 +776,7 @@ void VulkanEngine::createGraphicsPipeline()
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -908,7 +909,7 @@ bool VulkanEngine::hasStencilComponent(VkFormat format)
 void VulkanEngine::createTextureImage()
 {
     int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("textures/texture.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load("./../engine/assets/texture.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
 
     if (!pixels) {
@@ -1187,7 +1188,7 @@ void VulkanEngine::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
         VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, vkIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindIndexBuffer(commandBuffer, vkIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipelineLayout, 0, 1, &vkFrames[currentFrame].vkDescriptorSet, 0, nullptr);
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
@@ -1510,13 +1511,18 @@ bool VulkanEngine::checkValidationLayerSupport()
 
 VulkanEngine::VulkanEngine()
 {
-    Chunk testChunk;
-    testChunk.generateTestPattern();
-    testChunk.generateMesh(vertices, indices);
+    //Chunk testChunk;
+    //testChunk.generateTestPattern();
+    //testChunk.generateMesh(vertices, indices);
 }
 
 void VulkanEngine::run()
 {
+    //Terrain terrain(10, 10, 2);
+    Chunk chunk;
+    chunk.generateChunk();
+    chunk.draw(vertices, indices);
+
     init();
 
     SDL_Event e;
