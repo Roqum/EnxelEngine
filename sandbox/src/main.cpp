@@ -1,12 +1,10 @@
 
-//> main
-#include <Vulkan/vk_engine.h>
+#include <Enxel.h>
 
 int main(int argc, char* argv[])
 {
-	VulkanEngine graphicsEngine;
-
-	graphicsEngine.run();
+	Enxel enxel;
+	enxel.StartRenderer();
 
 	return 0;
 }
