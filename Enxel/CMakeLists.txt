@@ -1,18 +1,21 @@
-#add_subdirectory(Core)
-#add_subdirectory(Renderer)
-#add_subdirectory(ThirdParty)
-#add_subdirectory(World)
-
-add_library(Enxel SHARED
-    Enxel.cpp
- "Enxel.h")
-
-target_link_libraries(Enxel PRIVATE IRenderer)
-target_include_directories(Enxel PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/Renderer
-    ${CMAKE_CURRENT_SOURCE_DIR}
+file(GLOB_RECURSE ENXEL_SRC CONFIGURE_DEPENDS
+    src/*.cpp
+    include/*.h
 )
+
+add_library(Enxel SHARED ${ENXEL_SRC})
+
+#target_link_libraries(Enxel PRIVATE Renderer)
+
 target_include_directories(Enxel PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+set_target_properties(Enxel PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Enxel"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Enxel"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Enxel"
+)
+
+add_subdirectory(Renderer/Vulkan)

@@ -1,7 +1,7 @@
 
 add_library(VulkanRenderer SHARED
     src/VulkanRenderer.cpp
-    VulkanRenderer.h
+    include/Vulkan/VulkanRenderer.h
 )
 
 target_include_directories(VulkanRenderer PRIVATE
@@ -11,4 +11,4 @@ target_include_directories(VulkanRenderer PRIVATE
 )
 
 find_package(Vulkan REQUIRED)
-target_link_libraries(VulkanRenderer PRIVATE RendererAPI Vulkan::Vulkan)
+target_link_libraries(VulkanRenderer PRIVATE Vulkan::Vulkan)
