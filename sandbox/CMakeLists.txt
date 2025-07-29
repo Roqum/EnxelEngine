@@ -13,10 +13,18 @@ set_target_properties(Sandbox PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Sandbox"
 )
 
-# Copy DLL after build
+# Copy Enxel DLL after build
 add_custom_command(TARGET Sandbox POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Enxel/$<TARGET_FILE_NAME:Enxel>"
         "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Sandbox"
     COMMENT "Copying Enxel.dll to Sandbox output..."
+)
+
+# Copy Vulkan DLL after build
+add_custom_command(TARGET Sandbox POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Enxel/$<TARGET_FILE_NAME:VulkanRenderer>"
+        "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/Sandbox"
+    COMMENT "Copying VulkanRenderer.dll to Sandbox output..."
 )
