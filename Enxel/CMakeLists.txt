@@ -1,7 +1,13 @@
 file(GLOB_RECURSE ENXEL_SRC CONFIGURE_DEPENDS
     src/*.cpp
     include/*.h
+    Window/*.cpp
+    Window/*.h
 )
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
 
 add_library(Enxel SHARED ${ENXEL_SRC})
 
@@ -11,12 +17,12 @@ target_include_directories(Enxel PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-set_target_properties(Enxel PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_BINARY_DIR}/bin/Debug/Enxel"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/Release/Enxel"
-    LIBRARY_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_BINARY_DIR}/bin/Debug/Enxel"
-    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/Release/Enxel"
-    ARCHIVE_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_BINARY_DIR}/bin/Debug/Enxel"
-    ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/Release/Enxel"
-)
+add_subdirectory(ThirdParty)
 add_subdirectory(Renderer/Vulkan)
+
+#add_subdirectory(SDL EXCLUDE_FROM_ALL)  
+
+target_link_libraries(Enxel PUBLIC SDL3::SDL3)
+
+
+target_precompile_headers(Enxel PRIVATE "pchEnxel.h")

@@ -1,5 +1,18 @@
 #pragma once
 
+#include <memory>
+#include "Renderer/IRenderer.h"
+
+void* operator new (size_t size)
+{
+	return malloc(size);
+}
+
+void operator delete (void* mem)
+{
+	free(mem);
+}
+
 
 #ifdef ENXEL_BUILD
 #define ENXEL_API __declspec(dllexport)
@@ -10,5 +23,9 @@
 class ENXEL_API Enxel
 {
 public:
-	void StartRenderer();
+	
+	void StartEngine();
+
+protected:
+	IRenderer* renderer;
 };

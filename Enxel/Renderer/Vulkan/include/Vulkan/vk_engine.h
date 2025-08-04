@@ -110,8 +110,6 @@ private:
 	VkDeviceMemory vkDepthImageMemory;
 	VkImageView vkDepthImageView;
 
-
-
 	//VkCommandBuffer vkCommandBuffer;
 	//VkSemaphore vkImageAvailableSemaphore;
 	//VkSemaphore vkRenderFinishedSemaphore;

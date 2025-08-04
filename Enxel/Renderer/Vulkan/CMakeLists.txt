@@ -13,15 +13,5 @@ target_include_directories(VulkanRenderer PRIVATE
 )
 
 
-set_target_properties(VulkanRenderer PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_BINARY_DIR}/bin/Debug/Enxel"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/Release/Enxel"
-    LIBRARY_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_BINARY_DIR}/bin/Debug/Enxel"
-    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/Release/Enxel"
-    ARCHIVE_OUTPUT_DIRECTORY_DEBUG   "${CMAKE_BINARY_DIR}/bin/Debug/Enxel"
-    ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/Release/Enxel"
-)
-
-
 find_package(Vulkan REQUIRED)
 target_link_libraries(VulkanRenderer PRIVATE Vulkan::Vulkan)

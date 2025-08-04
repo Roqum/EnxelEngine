@@ -1,5 +1,6 @@
 #include "Enxel.h"
 #include "Renderer/IRenderer.h"
+#include "Window/Window.h"
 #include <iostream>
 #ifdef _WIN32
 #include <windows.h>
@@ -49,14 +50,52 @@ struct RendererModule {
     }
 };
 
-void Enxel::StartRenderer()
+void Enxel::StartEngine()
 {
-    RendererModule rendererModule;
-    if (!rendererModule.load("VulkanRenderer.dll"))
+    IWindow* window;
+    window->Create();
+    /*
+    if (renderer == nullptr)
     {
-        std::cout << "Failed to load renderer module\n";
-    }
+        RendererModule rendererModule;
+        if (!rendererModule.load("VulkanRenderer.dll"))
+        {
+            std::cout << "Failed to load renderer module\n";
+        }
 
-    IRenderer* renderer = rendererModule.instance;
+        IRenderer* renderer = rendererModule.instance;
+    }
     renderer->Init();
+
+
+    
+    while (!bQuit) {
+        // Handle events on queue
+        while (SDL_PollEvent(&e) != 0) {
+            // close the window when user alt-f4s or clicks the X button
+            if (e.type == SDL_EVENT_QUIT)
+            {
+                bQuit = true;
+            }
+
+            if (e.type == SDL_EVENT_WINDOW_MINIMIZED) {
+                stop_rendering = true;
+            }
+            if (e.type == SDL_EVENT_WINDOW_RESTORED) {
+                stop_rendering = false;
+            }
+
+        }
+
+        if (renderer->StopRendering()) {
+            // throttle the speed 
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+
+        renderer->RenderFrame();
+    }
+    cleanup();
+
+    */
 }
