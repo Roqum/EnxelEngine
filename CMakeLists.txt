@@ -1,12 +1,19 @@
 cmake_minimum_required(VERSION 3.16)
-project(GameEngine)
+project(EnxelEngine)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(third_party)
+#set(OUTPUT_DIR "${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}")
+set(Enxel CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
+set(Enxel CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
+set(Enxel CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
+set(Sandbox CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Sandbox/$<CONFIGURATION>")
+set(Sandbox CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Sandbox/$<CONFIGURATION>")
+set(Sandbox CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Sandbox/$<CONFIGURATION>")
+#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(ENXEL_OUTPUT_DIR "${OUTPUT_DIR}/Enxel")
+set(SANDBOX_OUTPUT_DIR "${OUTPUT_DIR}/Sandbox")
 
-# Engine and sandbox
-add_subdirectory(engine)
-add_subdirectory(sandbox)
-
+add_subdirectory(Enxel)
+add_subdirectory(Sandbox)
