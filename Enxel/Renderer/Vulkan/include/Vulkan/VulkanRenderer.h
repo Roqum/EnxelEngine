@@ -9,7 +9,6 @@
 #include <array>
 #include <optional>
 
-/*
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
@@ -94,6 +93,7 @@ struct SwapChainSupportDetails {
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
+/*
 class VulkanRenderer : public IRenderer
 {
 public:

@@ -14,6 +14,9 @@ public:
 	inline unsigned int GetWidth() const override { return Properties.Width; };
 	inline unsigned GetHeight() const override { return Properties.Height; };
 
+	bool Tick();
+	void Cleanup();
+
 private:
 	void Init(const WindowProperties& Properties);
 
