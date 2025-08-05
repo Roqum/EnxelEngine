@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[])
 {
-	Enxel enxel;
+	Enxel enxel = Enxel();
 	enxel.StartEngine();
 
 }

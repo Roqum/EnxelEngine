@@ -52,12 +52,11 @@ struct RendererModule {
 
 void Enxel::StartEngine()
 {
-    IWindow* window;
-    window = window->Create(WindowProperties());
+    IWindow* window = window->Create(WindowProperties());
 
     while (true)
     {
-		if (!window->Tick()) 
+		if (!window->Tick())
         {
             window->Cleanup();
 			break; 
