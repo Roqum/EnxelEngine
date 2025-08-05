@@ -10,6 +10,25 @@ WindowWin::WindowWin(const WindowProperties& props)
 	Init(props);
 }
 
+bool WindowWin::Tick()
+{
+	bool running = true;
+	SDL_Event event;
+
+	SDL_PollEvent(&event);
+	if (event.type == SDL_EVENT_QUIT) {
+		// TODO: Trigger close window event
+		running = false;
+	}
+	return running;
+}
+
+void WindowWin::Cleanup()
+{
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+}
+
 void WindowWin::Init(const WindowProperties& props)
 {
 	Properties.Title = props.Title;
@@ -20,9 +39,9 @@ void WindowWin::Init(const WindowProperties& props)
 	}
 
 	SDL_Window* window = SDL_CreateWindow(
-		"SDL Window",                     // title
-		Properties.Width, Properties.Height,                         // width, height
-		SDL_WINDOW_OPENGL                 // flags (optional: SDL_WINDOW_RESIZABLE, etc.)
+		Properties.Title.c_str(),
+		Properties.Width, Properties.Height,                         
+		SDL_WINDOW_VULKAN                 
 	);
 
 	if (!window) {
@@ -31,18 +50,6 @@ void WindowWin::Init(const WindowProperties& props)
 	bool running = true;
 	SDL_Event event;
 
-	while (running) 
-	{
-		SDL_PollEvent(&event);
-		if (event.type == SDL_EVENT_QUIT) {
-			running = false;
-		}
 
-		// Clear screen with black
-		SDL_Delay(16); // ~60 FPS
-	}
-
-	// Cleanup
-	SDL_DestroyWindow(window);
-	SDL_Quit();
+	
 }

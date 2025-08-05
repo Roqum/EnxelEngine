@@ -1,4 +1,5 @@
 #pragma once
+/*
 #include <vulkan/vulkan.h>
 #include "IRenderer.h"
 #include "glm/glm.hpp"
@@ -9,7 +10,6 @@
 #include <array>
 #include <optional>
 
-/*
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
@@ -93,6 +93,7 @@ struct SwapChainSupportDetails {
 	std::vector<VkSurfaceFormatKHR> formats;
 	std::vector<VkPresentModeKHR> presentModes;
 };
+
 
 class VulkanRenderer : public IRenderer
 {

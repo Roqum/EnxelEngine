@@ -1,4 +1,5 @@
 ﻿//> includes
+/*
 #define STB_IMAGE_IMPLEMENTATION
 #include "Vulkan/stb_image.h"
 #include "Vulkan/vk_engine.h"
@@ -384,9 +385,9 @@ void VulkanEngine::updateUniformBuffer(uint32_t currentImage)
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
     UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    ubo.view = glm::lookAt(glm::vec3(8.0f, 8.0f, 8.0f), glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    ubo.view = glm::lookAt(glm::vec3(60.0f, 60.0f, 60.0f), glm::vec3(16.0f, 16.0f, 16.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
     ubo.proj = glm::perspective(glm::radians(45.0f), vkSwapChainExtent.width / (float)vkSwapChainExtent.height, 0.1f, 100.0f);
 
@@ -1558,3 +1559,4 @@ void VulkanEngine::run()
     cleanup();
     
 }
+*/

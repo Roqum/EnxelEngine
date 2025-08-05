@@ -7,12 +7,11 @@
   },
   "configurePresets": [
     {
-      "name": "vs2022",
+      "name": "msvc2022",
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/bin"
-      }
+      "architecture": "x64",
+      "description": "Build with MSVC 2022 x64",
+      "binaryDir": "${sourceDir}/build"
     }
   ]
 }

@@ -1,13 +1,13 @@
 #include "Enxel.h"
-#include "Renderer/IRenderer.h"
-#include "Window/Window.h"
+#include "Renderer/RendererAPI.h"
+#include "Platform/Window/Window.h"
 #include <iostream>
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
 #endif
-
+/*
 using CreateRendererFunc = IRenderer * (*)();
 using DestroyRendererFunc = void (*)(IRenderer*);
 
@@ -49,11 +49,19 @@ struct RendererModule {
         destroy = nullptr;
     }
 };
-
+*/
 void Enxel::StartEngine()
 {
-    IWindow* window;
-    window->Create();
+    IWindow* window = window->Create(WindowProperties());
+
+    while (true)
+    {
+		if (!window->Tick()) 
+        {
+            window->Cleanup();
+			break; 
+		}
+    }
     /*
     if (renderer == nullptr)
     {
