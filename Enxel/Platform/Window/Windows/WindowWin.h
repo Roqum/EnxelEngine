@@ -10,9 +10,9 @@ class WindowWin : public IWindow
 public:
 	WindowWin(const WindowProperties& props);
 
-	inline unsigned int GetWidth() const override { return Properties.Width; };
-	inline unsigned GetHeight() const override { return Properties.Height; };
-	SDL_Window* GetSDLWindow() override;
+	inline unsigned int GetWidth() const override { return m_Properties.width; }
+	inline unsigned GetHeight() const override { return m_Properties.height; }
+	inline SDL_Window* GetSDLWindow() override { return m_Window; }
 
 	bool Tick();
 	void Cleanup();
@@ -20,6 +20,6 @@ public:
 private:
 	void Init(const WindowProperties& Properties);
 
-	WindowProperties Properties;
-	SDL_Window* window;
+	WindowProperties m_Properties;
+	SDL_Window* m_Window;
 };

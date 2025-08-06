@@ -25,36 +25,29 @@ bool WindowWin::Tick()
 
 void WindowWin::Cleanup()
 {
-	SDL_DestroyWindow(window);
+	SDL_DestroyWindow(m_Window);
 	SDL_Quit();
 }
 
 void WindowWin::Init(const WindowProperties& props)
 {
-	Properties.Title = props.Title;
-	Properties.Width = props.Width;
-	Properties.Height = props.Height;
+	m_Properties.title = props.title;
+	m_Properties.width = props.width;
+	m_Properties.height = props.height;
 
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 	}
 
-	window = SDL_CreateWindow(
-		Properties.Title,
-		Properties.Width, Properties.Height,                         
+	m_Window = SDL_CreateWindow(
+		m_Properties.title,
+		m_Properties.width, m_Properties.height,
 		SDL_WINDOW_VULKAN                 
 	);
 
-	if (!window) {
+	if (!m_Window) {
 		SDL_Quit();
 	}
 	bool running = true;
 	SDL_Event event;
 
-
-	
-}
-
-SDL_Window* WindowWin::GetSDLWindow()
-{
-	return window;
 }

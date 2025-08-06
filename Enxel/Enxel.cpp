@@ -53,7 +53,9 @@ struct RendererModule {
 void Enxel::StartEngine()
 {
     IWindow* window = window->Create(WindowProperties());
-	IRenderer* renderer = IRenderer::CreateRenderer(window->GetSDLWindow());
+    IRenderer* renderer; 
+    renderer->CreateRenderer(window->GetSDLWindow());
+
     while (true)
     {
 		if (!window->Tick())

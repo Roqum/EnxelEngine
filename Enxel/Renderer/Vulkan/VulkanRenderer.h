@@ -1,13 +1,15 @@
 #pragma once
+#include "pchEnxel.h"
 #include <vulkan/vulkan.h>
 #include "RendererAPI.h"
 #include "glm/glm.hpp"
-/*
+
+
 
 // TODO Replace STL with alternative (EASTL)
 #include <glm/glm.hpp>
 #include <vector>
-#include <array>
+//#include <array>
 #include <optional>
 
 #define GLM_FORCE_RADIANS
@@ -56,7 +58,7 @@ static std::array < VkVertexInputAttributeDescription, 3> getAttributeDescriptio
 
 	return attributeDescriptions;
 }
-
+/*
 struct UniformBufferObject {
 	alignas(16) glm::mat4 model;
 	alignas(16) glm::mat4 view;
