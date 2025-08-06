@@ -1,15 +1,14 @@
 #pragma once
 
-#include "string"
 
 struct WindowProperties
 {
 
-	std::string Title;
+	const char* Title;
 	unsigned int Width;
 	unsigned int Height;
 
-	WindowProperties(const std::string title = "Enxel Engine", 
+	WindowProperties(const char* title = "Enxel Engine", 
 		unsigned int width = 800,
 		unsigned int height = 600) 
 		: Title(title), Width(width), Height(height) 
@@ -30,5 +29,6 @@ public:
 
 	static IWindow* Create( const WindowProperties& props = WindowProperties());
 
+	virtual SDL_Window* GetSDLWindow() = 0;
 
 };

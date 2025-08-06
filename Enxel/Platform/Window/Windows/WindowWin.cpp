@@ -38,8 +38,8 @@ void WindowWin::Init(const WindowProperties& props)
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 	}
 
-	SDL_Window* window = SDL_CreateWindow(
-		Properties.Title.c_str(),
+	window = SDL_CreateWindow(
+		Properties.Title,
 		Properties.Width, Properties.Height,                         
 		SDL_WINDOW_VULKAN                 
 	);
@@ -52,4 +52,9 @@ void WindowWin::Init(const WindowProperties& props)
 
 
 	
+}
+
+SDL_Window* WindowWin::GetSDLWindow()
+{
+	return window;
 }

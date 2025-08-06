@@ -9,8 +9,10 @@ file(GLOB_RECURSE Renderer_SRC
 
 add_library(Renderer STATIC ${Renderer_SRC})
 
-target_link_libraries(Renderer PUBLIC SDL3::SDL3)
+find_package(Vulkan REQUIRED)
 
+target_link_libraries(Renderer PUBLIC SDL3::SDL3)
+target_link_libraries(Renderer PRIVATE Vulkan::Vulkan glm)
 target_include_directories(Renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 #add_subdirectory(Vulkan)
