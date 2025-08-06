@@ -34,7 +34,9 @@ add_subdirectory(Renderer)
 #add_subdirectory(SDL EXCLUDE_FROM_ALL)  
 
 target_link_libraries(Enxel PUBLIC SDL3::SDL3)
-target_link_libraries(Enxel PRIVATE VulkanRenderer Renderer PlatformWindow)
+target_link_libraries(Enxel PRIVATE Renderer PlatformWindow)
+
+set(ENXEL_PCH "${CMAKE_CURRENT_SOURCE_DIR}/pchEnxel.h")
 
 
-target_precompile_headers(Enxel PRIVATE "pchEnxel.h")
+target_precompile_headers(Enxel INTERFACE ${ENXEL_PCH})

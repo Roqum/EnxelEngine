@@ -12,18 +12,17 @@ include(FetchContent)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
 
-# === GLM ===
-#FetchContent_Declare(
-#    glm
-#   GIT_REPOSITORY https://github.com/g-truc/glm.git
-#   GIT_TAG latest  # or latest stable tag
-#)
-#FetchContent_Populate(glm)
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY	https://github.com/g-truc/glm.git
+	GIT_TAG release-1.0.2
+)  
+FetchContent_MakeAvailable(glm)
 
 # === SDL3 ===
 FetchContent_Declare(
     SDL
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG release-3.2.18  # adjust to the correct tag
+    GIT_TAG release-3.2.18  
 )
 FetchContent_MakeAvailable(SDL)
