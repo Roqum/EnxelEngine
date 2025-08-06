@@ -1,6 +1,0 @@
-[submodule "Enxel/ThirdParty/glm"]
-	path = Enxel/ThirdParty/glm
-	url = https://github.com/g-truc/glm.git
-[submodule "Enxel/ThirdParty/SDL"]
-	path = Enxel/ThirdParty/SDL
-	url = https://github.com/libsdl-org/SDL.git

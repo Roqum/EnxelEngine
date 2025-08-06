@@ -1,10 +1,9 @@
 #include "Vulkan/VulkanRenderer.h"
 #include <iostream>
 
-/*
-
-#include <SDL3 / SDL.h>
+#include "SDL3/SDL.h"
 #include <SDL3/SDL_vulkan.h>
+/*
 
 #ifdef _WIN32
 extern "C" __declspec(dllexport) IRenderer* CreateRenderer() {

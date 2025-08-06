@@ -15,7 +15,7 @@ target_link_libraries(Sandbox PRIVATE Enxel)
 # Copy Enxel DLL after build
 #add_custom_command(TARGET Sandbox POST_BUILD
 #    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#        "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIG>/$<TARGET_FILE_NAME:Enxel>"
+#        "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIG>/$<TARGET_FILE_NAME:SDL3>"
 #        "${CMAKE_BINARY_DIR}/bin/Sandbox/$<CONFIG>/"
 #    COMMENT "Copying Enxel.dll to Sandbox output..."
 #)

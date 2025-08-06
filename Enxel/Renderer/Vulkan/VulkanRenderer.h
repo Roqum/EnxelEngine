@@ -1,7 +1,8 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include "IRenderer.h"
+#include "RendererAPI.h"
 #include "glm/glm.hpp"
+/*
 
 // TODO Replace STL with alternative (EASTL)
 #include <glm/glm.hpp>
@@ -93,7 +94,7 @@ struct SwapChainSupportDetails {
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
-/*
+
 class VulkanRenderer : public IRenderer
 {
 public:
