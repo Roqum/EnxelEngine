@@ -8,12 +8,11 @@ if(WIN32)
         Windows/*.cpp
         Windows/*.h
     )
-elseif(UNIX)
-    #TODO 
-    #file(GLOB PLATFORM_SRC
-    #    Linux/*.cpp
-    #    Linux/*.h
-    #)
+elseif(UNIX) 
+    file(GLOB PLATFORM_SRC
+        Linux/*.cpp
+        Linux/*.h
+    )
 endif()
 
 list(APPEND PLATFORM_WINDOW_SRC ${PLATFORM_SRC})

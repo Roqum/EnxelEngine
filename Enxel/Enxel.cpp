@@ -54,7 +54,7 @@ void Enxel::StartEngine()
 {
     IWindow* window = window->Create(WindowProperties());
     IRenderer* renderer; 
-    renderer->CreateRenderer(window->GetSDLWindow());
+    //renderer->CreateRenderer(window->GetSDLWindow());
 
     while (true)
     {
