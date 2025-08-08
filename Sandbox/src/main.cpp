@@ -6,6 +6,8 @@
 
 int main(int argc, char* argv[])
 {
+    // Setting working dir into Asset folder
+    // Need refactoring later
 	if (argc >= 3 && std::string(argv[1]) == "-C") 
 	{
         std::string assetDir = argv[2];
