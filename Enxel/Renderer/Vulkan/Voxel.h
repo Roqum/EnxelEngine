@@ -2,7 +2,7 @@
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <array>
-#include "vulkan/Vertex.h"
+#include "Vertex.h"
 
 
 enum CubeFace {
