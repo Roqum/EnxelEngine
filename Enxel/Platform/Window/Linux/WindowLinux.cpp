@@ -1,16 +1,16 @@
-#include "WindowWin.h"
+#include "WindowLinux.h"
 
 IWindow* IWindow::Create(const WindowProperties& props)
 {
-	return new WindowWin(props);
+	return new WindowLinux(props);
 }
 
-WindowWin::WindowWin(const WindowProperties& props)
+WindowLinux::WindowLinux(const WindowProperties& props)
 {
 	Init(props);
 }
 
-bool WindowWin::Tick()
+bool WindowLinux::Tick()
 {
 	bool running = true;
 	SDL_Event event;
@@ -23,13 +23,13 @@ bool WindowWin::Tick()
 	return running;
 }
 
-void WindowWin::Cleanup()
+void WindowLinux::Cleanup()
 {
 	SDL_DestroyWindow(m_Window);
 	SDL_Quit();
 }
 
-void WindowWin::Init(const WindowProperties& props)
+void WindowLinux::Init(const WindowProperties& props)
 {
 	m_Properties.title = props.title;
 	m_Properties.width = props.width;

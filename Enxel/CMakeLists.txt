@@ -1,9 +1,10 @@
 file(GLOB  ENXEL_SRC CONFIGURE_DEPENDS 
-*.cpp 
-*.h
+Enxel.cpp 
+Enxel.h
 Window/*.cpp
 Window/*.h
 )
+
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
@@ -22,19 +23,19 @@ endif()
 
 add_library(Enxel STATIC ${ENXEL_SRC})
 
-
 target_include_directories(Enxel PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
 add_subdirectory(Platform)
 add_subdirectory(ThirdParty)
 add_subdirectory(Renderer)
 
 #add_subdirectory(SDL EXCLUDE_FROM_ALL)  
 
+
 target_link_libraries(Enxel PUBLIC SDL3::SDL3)
-target_link_libraries(Enxel PRIVATE VulkanRenderer Renderer PlatformWindow)
+target_link_libraries(Enxel PRIVATE Renderer PlatformWindow)
 
+#target_precompile_headers(Enxel REUSE_FROM pchCommon)
 
-target_precompile_headers(Enxel PRIVATE "pchEnxel.h")
+#target_precompile_headers(Enxel INTERFACE ${ENXEL_PCH})

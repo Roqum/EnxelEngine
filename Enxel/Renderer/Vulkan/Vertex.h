@@ -1,5 +1,5 @@
 #pragma once
-/*
+
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <array>
@@ -40,4 +40,3 @@ static std::array < VkVertexInputAttributeDescription, 3> getAttributeDescriptio
 
 	return attributeDescriptions;
 }
-*/

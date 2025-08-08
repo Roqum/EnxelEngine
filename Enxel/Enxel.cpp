@@ -53,15 +53,21 @@ struct RendererModule {
 void Enxel::StartEngine()
 {
     IWindow* window = window->Create(WindowProperties());
+    IRenderer* renderer = IRenderer::CreateRenderer();
+	renderer->Initialize(window->GetSDLWindow());
 
     while (true)
     {
-		if (!window->Tick()) 
+		if (!window->Tick())
         {
             window->Cleanup();
 			break; 
 		}
+		renderer->RenderFrame();
     }
+
+    renderer->Shutdown();
+
     /*
     if (renderer == nullptr)
     {

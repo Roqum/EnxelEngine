@@ -5,10 +5,10 @@
 
 
 
-class WindowWin : public IWindow
+class WindowLinux : public IWindow
 {
 public:
-	WindowWin(const WindowProperties& props);
+	WindowLinux(const WindowProperties& props);
 
 	inline unsigned int GetWidth() const override { return m_Properties.width; }
 	inline unsigned GetHeight() const override { return m_Properties.height; }

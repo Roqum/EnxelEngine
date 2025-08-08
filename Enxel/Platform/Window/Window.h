@@ -1,18 +1,18 @@
 #pragma once
+#include <SDL3/SDL_video.h>
 
-#include "string"
 
 struct WindowProperties
 {
 
-	std::string Title;
-	unsigned int Width;
-	unsigned int Height;
+	const char* title;
+	unsigned int width;
+	unsigned int height;
 
-	WindowProperties(const std::string title = "Enxel Engine", 
-		unsigned int width = 800,
-		unsigned int height = 600) 
-		: Title(title), Width(width), Height(height) 
+	WindowProperties(const char* title = "Enxel Engine", 
+		unsigned int width = 1000,
+		unsigned int height = 800) 
+		: title(title), width(width), height(height) 
 	{
 	}
 
@@ -30,5 +30,6 @@ public:
 
 	static IWindow* Create( const WindowProperties& props = WindowProperties());
 
+	virtual SDL_Window* GetSDLWindow() = 0;
 
 };
