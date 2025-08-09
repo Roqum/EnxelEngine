@@ -1,6 +1,6 @@
 #include "VulkanBuffer.h"
 
-VulkanVertexBuffer::VulkanVertexBuffer()
+VulkanVertexBuffer::VulkanVertexBuffer() : m_Layout({})
 {
 }
 

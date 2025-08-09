@@ -12,6 +12,11 @@ public:
     virtual void Bind() const override;
     virtual void Unbind() const override;
 
+    inline virtual void SetLayout(const VertexBufferLayout& bufferLayout) { m_Layout = bufferLayout;}
+    inline virtual const VertexBufferLayout& GetLayout() const { return m_Layout; }
+
+private:
+    VertexBufferLayout m_Layout;
 };
 
 class VulkanIndexBuffer : public IndexBuffer

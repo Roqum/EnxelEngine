@@ -11,7 +11,6 @@
 // filesystem stuff (should not be dealt with in renderer)
 #define STB_IMAGE_IMPLEMENTATION
 #include "../ThirdParty/stb_image.h"
-#include "Vulkan/vk_engine.h"
 #include <filesystem>
 #include <fstream>
 
