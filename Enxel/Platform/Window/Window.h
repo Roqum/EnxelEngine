@@ -28,7 +28,7 @@ public:
 	virtual bool Tick() = 0;
 	virtual void Cleanup() = 0;
 
-	static IWindow* Create( const WindowProperties& props = WindowProperties());
+	static IWindow* Create(const WindowProperties& props = WindowProperties());
 
 	virtual SDL_Window* GetSDLWindow() = 0;
 

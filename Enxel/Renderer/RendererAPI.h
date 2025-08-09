@@ -12,8 +12,12 @@ public:
 
     virtual ~IRenderer() = default;
 
-    static IRenderer* CreateRenderer();
+    static IRenderer* Create();
     virtual void Initialize(SDL_Window* sdlWindow) = 0;
+    virtual void BeginScene() = 0;
+    virtual void EndScene() = 0;
+    virtual void Submit() = 0;
+    
     virtual void RenderFrame() = 0;
     virtual void Shutdown() = 0;
     virtual void StopRendering() = 0;

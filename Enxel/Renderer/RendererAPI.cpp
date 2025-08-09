@@ -3,7 +3,7 @@
 
 IRenderer::RendererSelection IRenderer::s_RendererSelection  = IRenderer::RendererSelection::Vulkan;
 
-IRenderer* IRenderer::CreateRenderer()
+IRenderer* IRenderer::Create()
 {
     if (s_RendererSelection == RendererSelection::Vulkan)
     {

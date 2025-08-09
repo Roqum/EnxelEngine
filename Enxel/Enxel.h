@@ -2,6 +2,10 @@
 
 #include <memory>
 #include "Renderer/RendererAPI.h"
+#include "Renderer/Buffer.h"
+#include "Platform/Window/Window.h"
+
+
 /*
 void* operator new (size_t size)
 {
@@ -21,5 +25,10 @@ public:
 	void StartEngine();
 
 protected:
-	IRenderer* renderer;
+	std::unique_ptr<IWindow> m_Window;
+	std::unique_ptr<IRenderer> m_Renderer;
+
+	std::unique_ptr<VertexBuffer> m_VertexBuffer;
+	std::unique_ptr<IndexBuffer> m_IndexBuffer;
+
 };
