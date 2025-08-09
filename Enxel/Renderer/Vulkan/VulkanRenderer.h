@@ -69,10 +69,14 @@ class VulkanRenderer : public IRenderer
 {
 public:
 	// Inherited via IRenderer
+
+	void Initialize(SDL_Window* sdlWindow);
+	virtual void BeginScene() override;
+	virtual void EndScene() override;
+	virtual void Submit() override;
 	void RenderFrame() override;
 	void StopRendering() override;
 	void Shutdown() override;
-	void Initialize(SDL_Window* sdlWindow);
 
 private:
     void CreateInstance();

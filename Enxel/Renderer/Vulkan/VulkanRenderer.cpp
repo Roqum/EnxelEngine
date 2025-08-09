@@ -90,17 +90,21 @@ void VulkanRenderer::Initialize(SDL_Window* sdlWindow)
 
 }
 
+void VulkanRenderer::BeginScene()
+{
+}
+
+void VulkanRenderer::EndScene()
+{
+}
+
+void VulkanRenderer::Submit()
+{
+}
+
 
 void VulkanRenderer::RenderFrame()
 {
-    //m_Chunk->generateChunk();
-    //m_VkVertices = std::vector<Vertex>();
-    //m_VkVertices.reserve(98304); // 32x32x32 chunk, each voxel has 6 faces, so 32768 * 6 * 4 = 786432 vertices (worst case) - face culling as only outer are drawn = ~98304
-
-    //m_VkIndices = std::vector<uint32_t>();
-    //m_VkIndices.reserve(147456); // same as above
-    //m_Chunk->draw(m_VkVertices, m_VkIndices);
-
     vkWaitForFences(m_VkDevice, 1, &m_VkFrames[m_CurrentFrame].vkInFlightFence, VK_TRUE, UINT64_MAX);
 
 
