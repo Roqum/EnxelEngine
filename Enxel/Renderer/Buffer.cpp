@@ -25,3 +25,4 @@ IndexBuffer* IndexBuffer::Create()
 	}
 	return nullptr;
 }
+
