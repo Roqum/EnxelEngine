@@ -1,6 +1,6 @@
 #pragma once
 #include <SDL3/SDL_video.h>
-
+#include "Buffer.h"
 class IRenderer {
 public:
     enum class RendererSelection
@@ -13,10 +13,11 @@ public:
     virtual ~IRenderer() = default;
 
     static IRenderer* Create();
+
     virtual void Initialize(SDL_Window* sdlWindow) = 0;
     virtual void BeginScene() = 0;
     virtual void EndScene() = 0;
-    virtual void Submit() = 0;
+    virtual void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) = 0;
     
     virtual void RenderFrame() = 0;
     virtual void Shutdown() = 0;

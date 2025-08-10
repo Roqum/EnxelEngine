@@ -1509,3 +1509,4 @@ VkPresentModeKHR VulkanRenderer::ChooseSwapPresentMode(const std::vector<VkPrese
 
     return VK_PRESENT_MODE_FIFO_KHR;
 }
+

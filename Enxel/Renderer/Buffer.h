@@ -1,10 +1,11 @@
 #pragma once
 #include "BufferLayout.h"
+#include "Vulkan/Vertex.h"
 
 class VertexBuffer
 {
 public:
-    static VertexBuffer* Create();
+    static VertexBuffer* Create(std::vector<Vertex>& vertices);
     virtual ~VertexBuffer() {}
 
     virtual void Bind() const = 0;

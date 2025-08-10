@@ -6,7 +6,7 @@ class VulkanVertexBuffer : public VertexBuffer
 {
 public:
 
-    VulkanVertexBuffer();
+    VulkanVertexBuffer(std::vector<Vertex>& vertices);
     virtual ~VulkanVertexBuffer() {}
 
     virtual void Bind() const override;

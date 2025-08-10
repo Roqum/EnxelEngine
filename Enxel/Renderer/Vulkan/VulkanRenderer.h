@@ -16,6 +16,8 @@
 #include <array>
 #include <optional>
 
+#include "Vulkan/VulkanBuffer.h"
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
@@ -73,7 +75,10 @@ public:
 	void Initialize(SDL_Window* sdlWindow);
 	virtual void BeginScene() override;
 	virtual void EndScene() override;
-	virtual void Submit() override;
+	void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) override;
+
+	VertexBuffer& CreateVertexBuffer();
+	//virtual void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) override;
 	void RenderFrame() override;
 	void StopRendering() override;
 	void Shutdown() override;
@@ -203,5 +208,6 @@ private:
 	bool m_IsWindowInitialized{ false };
 	int m_FrameNumber{ 0 };
 	bool m_Stop_rendering{ false };
+
 };
 
