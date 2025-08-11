@@ -17,18 +17,20 @@ void operator delete (void* mem)
 	free(mem);
 }
 */
-
-class Enxel
+namespace Enxel
 {
-public:
+	class Enxel
+	{
+	public:
 	
-	void StartEngine();
+		void StartEngine();
 
-protected:
-	std::unique_ptr<IWindow> m_Window;
-	std::unique_ptr<IRenderer> m_Renderer;
+	protected:
+		std::unique_ptr<IWindow> m_Window;
+		std::unique_ptr<IRenderer> m_Renderer;
 
-	std::unique_ptr<VertexBuffer> m_VertexBuffer;
-	std::unique_ptr<IndexBuffer> m_IndexBuffer;
+		std::unique_ptr<VertexBuffer> m_VertexBuffer;
+		std::unique_ptr<IndexBuffer> m_IndexBuffer;
 
-};
+	};
+}

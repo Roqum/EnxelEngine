@@ -66,8 +66,9 @@ struct SwapChainSupportDetails {
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
-
-class VulkanRenderer : public IRenderer
+namespace Enxel
+{
+	class VulkanRenderer : public IRenderer
 {
 public:
 	// Inherited via IRenderer
@@ -77,7 +78,10 @@ public:
 	virtual void EndScene() override;
 	void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) override;
 
-	VertexBuffer& CreateVertexBuffer();
+	VulkanVertexBuffer* CreateVertexBuffer(std::vector<Vertex>& verticies) override;
+	VulkanIndexBuffer* CreateIndexBuffer(std::vector<uint32_t>& indices) override;
+
+
 	//virtual void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) override;
 	void RenderFrame() override;
 	void StopRendering() override;
@@ -99,8 +103,8 @@ private:
 	void CreateTextureImage();
 	void CreateTextureImageView();
 	void CreateTextureSampler();
-	void CreateVertexBuffer();
-	void CreateIndexBuffer();
+	//void CreateVertexBuffer();
+	//void CreateIndexBuffer();
 	void CreateUniformBuffers();
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
@@ -210,4 +214,4 @@ private:
 	bool m_Stop_rendering{ false };
 
 };
-
+}

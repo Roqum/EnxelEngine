@@ -56,8 +56,8 @@ public:
 
 	std::vector<BufferElement>::iterator begin() { return m_BufferElements.begin(); }
 	std::vector<BufferElement>::iterator end() { return m_BufferElements.end(); }
-	std::vector<BufferElement>::const_iterator begin() { return m_BufferElements.begin(); }
-	std::vector<BufferElement>::const_iterator end() { return m_BufferElements.end(); }
+	//std::vector<BufferElement>::const_iterator begin() { return m_BufferElements.begin(); }
+	//std::vector<BufferElement>::const_iterator end() { return m_BufferElements.end(); }
 
 private:
 	std::vector<BufferElement> m_BufferElements;

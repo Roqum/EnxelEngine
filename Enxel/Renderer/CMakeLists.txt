@@ -13,8 +13,9 @@ target_include_directories(Renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(Vulkan REQUIRED)
 
-target_link_libraries(Renderer PUBLIC SDL3::SDL3)
-target_link_libraries(Renderer PRIVATE Vulkan::Vulkan glm)
+
+target_link_libraries(Renderer PUBLIC SDL3::SDL3 Vulkan::Vulkan )
+target_link_libraries(Renderer PRIVATE glm::glm)
 
 #target_precompile_headers(Renderer REUSE_FROM pchCommon)
 
