@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
         std::cout << "Working directory: " << std::filesystem::current_path() << std::endl;
     }
 
-	Enxel enxel;
+	Enxel::Enxel enxel;
 	enxel.StartEngine();
 
 }

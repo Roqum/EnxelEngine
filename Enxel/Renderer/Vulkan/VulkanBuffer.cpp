@@ -1,25 +1,35 @@
 #include "VulkanBuffer.h"
+#include <vulkan/vulkan.h>
 
-VulkanVertexBuffer::VulkanVertexBuffer() : m_Layout({})
+namespace Enxel
 {
-}
 
-void VulkanVertexBuffer::Bind() const
-{
-}
+    VulkanVertexBuffer::VulkanVertexBuffer(VkDeviceSize size, VkDevice* device, VkBuffer buffer, VkDeviceMemory deviceMemory)
+        : m_Size(size), m_Vkdevice(device), m_Layout({}), m_VkBuffer(buffer), m_VkBufferMemory(deviceMemory)
+    {
+    
+    }
 
-void VulkanVertexBuffer::Unbind() const
-{
-}
+    void VulkanVertexBuffer::Bind() const
+    {
 
-VulkanIndexBuffer::VulkanIndexBuffer()
-{
-}
+    }
 
-void VulkanIndexBuffer::Bind() const
-{
-}
+    void VulkanVertexBuffer::Unbind() const
+    {
+    }
 
-void VulkanIndexBuffer::Unbind() const
-{
+    VulkanIndexBuffer::VulkanIndexBuffer(VkDeviceSize size, VkDevice* device, VkBuffer buffer, VkDeviceMemory deviceMemory)
+	    : m_Size(size), m_Vkdevice(device), m_VkBuffer(buffer), m_VkBufferMemory(deviceMemory)
+    {
+    }
+
+    void VulkanIndexBuffer::Bind() const
+    {
+    }
+
+    void VulkanIndexBuffer::Unbind() const
+    {
+    }
+
 }

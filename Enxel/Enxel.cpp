@@ -1,11 +1,16 @@
 #include "Enxel.h"
 #include "Renderer/RendererAPI.h"
 #include <iostream>
+#include "Vulkan/Chunk.h"
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
 #endif
+
+namespace Enxel
+{
+
 
 void Enxel::StartEngine()
 {
@@ -14,9 +19,16 @@ void Enxel::StartEngine()
     m_Renderer->Initialize(m_Window->GetSDLWindow());
 
 
-	m_VertexBuffer = std::unique_ptr<VertexBuffer>(VertexBuffer::Create());
-	m_IndexBuffer = std::unique_ptr<IndexBuffer>(IndexBuffer::Create());
+    //m_VertexBuffer = std::unique_ptr<VertexBuffer>(VertexBuffer::Create());
+	//m_IndexBuffer = std::unique_ptr<IndexBuffer>(IndexBuffer::Create());
 
+	Chunk m_ChunkTest;
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+
+	m_ChunkTest.draw(vertices, indices);
+    m_ChunkTest.vertexBuffer = m_Renderer->CreateVertexBuffer(vertices);
+    m_ChunkTest.indexBuffer = m_Renderer->CreateIndexBuffer(indices);
 
     while (true)
     {
@@ -25,6 +37,8 @@ void Enxel::StartEngine()
             m_Window->Cleanup();
 			break; 
 		}
+
+        m_Renderer->Submit(m_ChunkTest.vertexBuffer, m_ChunkTest.indexBuffer);
         m_Renderer->RenderFrame();
     }
 
@@ -74,4 +88,5 @@ void Enxel::StartEngine()
     cleanup();
 
     */
+}
 }
