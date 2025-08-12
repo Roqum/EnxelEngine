@@ -2,6 +2,7 @@
 
 #include "Buffer.h"
 #include <memory>
+#include <vulkan/vulkan.h>
 
 namespace Enxel
 {
@@ -20,11 +21,11 @@ namespace Enxel
         inline virtual void SetLayout(const VertexBufferLayout& bufferLayout) { m_Layout = bufferLayout;}
         inline virtual const VertexBufferLayout& GetLayout() const { return m_Layout; }
 
-    private:
 	    VkBuffer m_VkBuffer;
 	    VkDeviceMemory m_VkBufferMemory;
         std::unique_ptr<VkDevice> m_Vkdevice;
 	    VkDeviceSize m_Size;
+    private:
 
         VertexBufferLayout m_Layout = {};
     };
@@ -39,10 +40,10 @@ namespace Enxel
         virtual void Bind() const override;
         virtual void Unbind() const override;
 
-    private:
         VkBuffer m_VkBuffer;
         VkDeviceMemory m_VkBufferMemory;
         std::unique_ptr<VkDevice> m_Vkdevice;
         VkDeviceSize m_Size;
+    private:
     };
 }

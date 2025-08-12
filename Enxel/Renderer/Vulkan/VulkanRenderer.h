@@ -17,6 +17,7 @@
 #include <optional>
 
 #include "Vulkan/VulkanBuffer.h"
+#include "VulkanBuffer.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -29,6 +30,37 @@ const bool enableValidationLayers = true;
 
 constexpr unsigned int FRAME_OVERLAP = 2;
 
+static VkVertexInputBindingDescription getBindingDescription() {
+	VkVertexInputBindingDescription bindingDescription{};
+	bindingDescription.binding = 0;
+	bindingDescription.stride = sizeof(Vertex);
+	bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	return bindingDescription;
+}
+static std::array < VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+	std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+
+	attributeDescriptions[0].binding = 0;
+	attributeDescriptions[0].location = 0;
+	attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+	attributeDescriptions[1].binding = 0;
+	attributeDescriptions[1].location = 1;
+	attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+	attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+	attributeDescriptions[2].binding = 0;
+	attributeDescriptions[2].location = 2;
+	attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+	attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
+	return attributeDescriptions;
+}
+
+namespace Enxel
+{
 struct UniformBufferObject {
 	alignas(16) glm::mat4 model;
 	alignas(16) glm::mat4 view;
@@ -66,13 +98,15 @@ struct SwapChainSupportDetails {
 	std::vector<VkPresentModeKHR> presentModes;
 };
 
-namespace Enxel
+struct RenderCommand
 {
+	VulkanVertexBuffer* vertexBuffer;
+	VulkanIndexBuffer* indexBuffer;
+};
 	class VulkanRenderer : public IRenderer
 {
 public:
 	// Inherited via IRenderer
-
 	void Initialize(SDL_Window* sdlWindow);
 	virtual void BeginScene() override;
 	virtual void EndScene() override;
@@ -80,9 +114,6 @@ public:
 
 	VulkanVertexBuffer* CreateVertexBuffer(std::vector<Vertex>& verticies) override;
 	VulkanIndexBuffer* CreateIndexBuffer(std::vector<uint32_t>& indices) override;
-
-
-	//virtual void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) override;
 	void RenderFrame() override;
 	void StopRendering() override;
 	void Shutdown() override;
@@ -140,12 +171,7 @@ private:
 	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 
-
-	//Just for testing
-	Chunk* m_Chunk;
-
-	std::vector<Vertex> m_VkVertices;
-	std::vector<uint32_t> m_VkIndices;
+	std::vector<RenderCommand> m_RenderQueue;
 
 	int m_WindowHeight;	
 	int m_WindowWidth;
@@ -174,10 +200,6 @@ private:
 
 	VkCommandPool m_VkTransferCommandPool;
 
-	VkBuffer m_VkVertexBuffer;
-	VkDeviceMemory m_VkVertexBufferMemory;
-	VkBuffer m_VkIndexBuffer;
-	VkDeviceMemory m_VkIndexBufferMemory;
 	VkBuffer m_VkStagingBuffer;
 	VkDeviceMemory m_VkStagingBufferMemory;
 

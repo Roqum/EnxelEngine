@@ -37,6 +37,8 @@ void Enxel::StartEngine()
             m_Window->Cleanup();
 			break; 
 		}
+
+        m_Renderer->Submit(m_ChunkTest.vertexBuffer, m_ChunkTest.indexBuffer);
         m_Renderer->RenderFrame();
     }
 

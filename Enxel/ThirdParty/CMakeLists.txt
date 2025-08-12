@@ -12,12 +12,7 @@ include(FetchContent)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
 
-FetchContent_Declare(
-	glm
-	GIT_REPOSITORY	https://github.com/g-truc/glm.git
-	GIT_TAG release-1.0.2
-)  
-FetchContent_MakeAvailable(glm)
+add_subdirectory(glm-1.0.1)
 
 # === SDL3 ===
 FetchContent_Declare(

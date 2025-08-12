@@ -42,6 +42,8 @@ namespace Enxel
 
     void VulkanRenderer::Initialize(SDL_Window* sdlWindow)
     {
+		m_RenderQueue.reserve(1000); 
+
         SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
 
         m_VkWindow = sdlWindow;
@@ -51,21 +53,6 @@ namespace Enxel
             SDL_Quit();
             return;
         }
-
-	
-
-        //Just for testing purposes
-        // This shouldnt be inside here
-        Chunk m_ChunkTest;
-        m_ChunkTest.generateChunk();
-        m_VkVertices = std::vector<Vertex>();
-        m_VkVertices.reserve(98304); // 32x32x32 chunk, each voxel has 6 faces, so 32768 * 6 * 4 = 786432 vertices (worst case) - face culling as only outer are drawn = ~98304
-        m_VkIndices = std::vector<uint32_t>();
-        m_VkIndices.reserve(147456); // same as above
-        m_ChunkTest.draw(m_VkVertices, m_VkIndices);
-        //
-
-
 
         CreateInstance();
         CreateSurface();
@@ -102,6 +89,7 @@ namespace Enxel
 
     void VulkanRenderer::Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer)
     {
+		m_RenderQueue.emplace_back((VulkanVertexBuffer*)vertexBuffer, (VulkanIndexBuffer*)indexBuffer);
     }
 
 
@@ -192,11 +180,11 @@ namespace Enxel
             vkFreeMemory(m_VkDevice, m_VkFrames[i].vkUniformBuffersMemory, nullptr);
         }
 
-        vkDestroyBuffer(m_VkDevice, m_VkIndexBuffer, nullptr);
-        vkFreeMemory(m_VkDevice, m_VkIndexBufferMemory, nullptr);
+        //vkDestroyBuffer(m_VkDevice, m_VkIndexBuffer, nullptr);
+        //vkFreeMemory(m_VkDevice, m_VkIndexBufferMemory, nullptr);
 
-        vkDestroyBuffer(m_VkDevice, m_VkVertexBuffer, nullptr);
-        vkFreeMemory(m_VkDevice, m_VkVertexBufferMemory, nullptr);
+        //vkDestroyBuffer(m_VkDevice, m_VkVertexBuffer, nullptr);
+        //vkFreeMemory(m_VkDevice, m_VkVertexBufferMemory, nullptr);
 
         for (size_t i = 0; i < FRAME_OVERLAP; i++)
         {
@@ -1343,16 +1331,18 @@ namespace Enxel
         scissor.extent = m_VkSwapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        VkBuffer vertexBuffers[] = { m_VkVertexBuffer };
+        RenderCommand& renderCommand = m_RenderQueue.back(); 
+        VkBuffer vertexBuffers[] = { renderCommand.vertexBuffer->m_VkBuffer };
         VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, m_VkIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffer, renderCommand.indexBuffer->m_VkBuffer, 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, &m_VkFrames[m_CurrentFrame].vkDescriptorSet, 0, nullptr);
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_VkIndices.size()), 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderCommand.indexBuffer->m_Size), 1, 0, 0, 0);
         vkCmdEndRenderPass(commandBuffer);
 
+        m_RenderQueue.pop_back();
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");
         }
