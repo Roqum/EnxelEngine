@@ -8,6 +8,8 @@
 
 namespace Enxel
 {
+
+	// TODO: Move out of Vulkan Renderer
 	struct Chunk {
 
 		VertexBuffer* vertexBuffer;
@@ -15,6 +17,7 @@ namespace Enxel
 
 		static const int CHUNK_SIZE = 32;
 
+		// Bad memory management here. But for now its just for testing rendring
 		uint8_t blocks[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
 		void generateChunk() {
@@ -26,6 +29,8 @@ namespace Enxel
 				}
 			}
 		}
+
+		// Same bad memory management here
 		void draw(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 		{
 			vertices.clear();
