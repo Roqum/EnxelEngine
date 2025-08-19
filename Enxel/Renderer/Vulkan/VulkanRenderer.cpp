@@ -14,8 +14,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include "Chunk.h"
-
 namespace Enxel
 {
     // TODO: I dont want renderer to read files from system. They should be passed in instead

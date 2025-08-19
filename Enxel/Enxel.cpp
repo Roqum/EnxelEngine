@@ -1,12 +1,13 @@
 #include "Enxel.h"
 #include "Renderer/RendererAPI.h"
 #include <iostream>
-#include "Vulkan/Chunk.h"
+#include "World/World.h"
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
 #endif
+#include <World/Chunk.h>
 
 namespace Enxel
 {
@@ -22,13 +23,19 @@ void Enxel::StartEngine()
     //m_VertexBuffer = std::unique_ptr<VertexBuffer>(VertexBuffer::Create());
 	//m_IndexBuffer = std::unique_ptr<IndexBuffer>(IndexBuffer::Create());
 
-	Chunk m_ChunkTest;
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
+	World* world = new World();
+    world->Generate(0,0);
+    
 
-	m_ChunkTest.draw(vertices, indices);
-    m_ChunkTest.vertexBuffer = m_Renderer->CreateVertexBuffer(vertices);
-    m_ChunkTest.indexBuffer = m_Renderer->CreateIndexBuffer(indices);
+	for (Chunk& chunk : world->chunks)
+	{
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+        chunk.draw(vertices, indices);
+        chunk.setVertexBuffer(m_Renderer->CreateVertexBuffer(vertices));
+        chunk.setIndexBuffer(m_Renderer->CreateIndexBuffer(indices));
+	}
+    
 
     while (true)
     {
@@ -38,11 +45,15 @@ void Enxel::StartEngine()
 			break; 
 		}
 
-        m_Renderer->Submit(m_ChunkTest.vertexBuffer, m_ChunkTest.indexBuffer);
+        for (Chunk& chunk : world->chunks)
+        {
+            m_Renderer->Submit(chunk.getVertexBuffer(), chunk.getIndexBuffer());
+        }
         m_Renderer->RenderFrame();
     }
 
     m_Renderer->Shutdown();
+    delete world;
 
     /*
     if (renderer == nullptr)

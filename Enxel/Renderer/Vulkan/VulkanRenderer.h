@@ -5,7 +5,6 @@
 #include "glm/glm.hpp"
 
 // Just for testing purposes
-#include "Chunk.h"
 #include "Vertex.h"
 
 
