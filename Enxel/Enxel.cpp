@@ -24,7 +24,7 @@ void Enxel::StartEngine()
 	//m_IndexBuffer = std::unique_ptr<IndexBuffer>(IndexBuffer::Create());
 
 	World* world = new World();
-    world->Generate(0,0);
+    world->Generate(6,6);
     
 
 	for (Chunk& chunk : world->chunks)

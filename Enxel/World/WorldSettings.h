@@ -16,7 +16,7 @@ namespace Enxel
 		int ChunkShiftZ;
 		int ChunkVolume;
 
-		WorldSettings(unsigned int seed = 1, unsigned short maxHeight = 32, uint8_t chunkSize = 32, float voxelSize = 1)
+		WorldSettings(unsigned int seed = 1, unsigned short maxHeight = 30, uint8_t chunkSize = 32, float voxelSize = 1)
 			: Seed(seed), MaxHeight(maxHeight), ChunkSize(chunkSize), VoxelSize(voxelSize)
 		{
 			ChunkVolume = ChunkSize * ChunkSize * ChunkSize;

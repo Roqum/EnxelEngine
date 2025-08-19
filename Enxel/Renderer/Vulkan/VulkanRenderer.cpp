@@ -1231,11 +1231,16 @@ namespace Enxel
 
         UniformBufferObject ubo{};
         ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        ubo.model = glm::translate(ubo.model, glm::vec3(4.0f, 0.0f, 0.0f));
 
         ubo.view = glm::lookAt(glm::vec3(60.0f, 60.0f, 60.0f), glm::vec3(16.0f, 16.0f, 16.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-        ubo.proj = glm::perspective(glm::radians(45.0f), m_VkSwapChainExtent.width / (float)m_VkSwapChainExtent.height, 0.1f, 100.0f);
-
+        ubo.proj = glm::perspective(
+            glm::radians(45.0f),
+            m_VkSwapChainExtent.width / (float)m_VkSwapChainExtent.height,
+            0.1f,
+            10000.0f // or larger, depending on scene scale
+        );
         ubo.proj[1][1] *= -1;
 
         memcpy(m_VkFrames[currentImage].vkUniformBuffersMapped, &ubo, sizeof(ubo));
@@ -1329,18 +1334,21 @@ namespace Enxel
         scissor.extent = m_VkSwapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        RenderCommand& renderCommand = m_RenderQueue.back(); 
-        VkBuffer vertexBuffers[] = { renderCommand.vertexBuffer->m_VkBuffer };
-        VkDeviceSize offsets[] = { 0 };
+        while (!m_RenderQueue.empty())
+        { 
+            RenderCommand& renderCommand = m_RenderQueue.back(); 
+            VkBuffer vertexBuffers[] = { renderCommand.vertexBuffer->m_VkBuffer };
+            VkDeviceSize offsets[] = { 0 };
 
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(commandBuffer, renderCommand.indexBuffer->m_VkBuffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindIndexBuffer(commandBuffer, renderCommand.indexBuffer->m_VkBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, &m_VkFrames[m_CurrentFrame].vkDescriptorSet, 0, nullptr);
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderCommand.indexBuffer->m_Size), 1, 0, 0, 0);
-        vkCmdEndRenderPass(commandBuffer);
+            m_RenderQueue.pop_back();
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, &m_VkFrames[m_CurrentFrame].vkDescriptorSet, 0, nullptr);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderCommand.indexBuffer->m_Size), 1, 0, 0, 0);
+        }
+            vkCmdEndRenderPass(commandBuffer);
 
-        m_RenderQueue.pop_back();
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");
         }

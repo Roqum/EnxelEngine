@@ -12,10 +12,10 @@ namespace Enxel
 	// Test purpose
 	void World::Generate(int length, int width)
 	{
-		chunks.reserve(4);
-		for (int x = 0; x < 2; x++)
+		chunks.reserve(length * width);
+		for (int x = -(length / 2); x < (length / 2); x++)
 		{
-			for (int z = 0; z < 2; z++)
+			for (int z = -(width / 2); z < (width / 2); z++)
 			{
 				chunks.emplace_back(x, 0, z, m_Settings, m_PerlinNoise);
 			}

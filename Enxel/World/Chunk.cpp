@@ -22,8 +22,8 @@ namespace Enxel
 				static_cast<float>((m_WorldSpacePosition.z + localZ * m_Settings.VoxelSize) * 0.05f)
 			);
 
-			int z = int(noiseValue * m_Settings.MaxHeight);
-			if (localY <= z) {
+			int height = static_cast<int>(1 + noiseValue * (m_Settings.MaxHeight - 1));
+			if (localY <= height) {
 				voxels[index].Type = VoxelType::GRASS; // Solid voxel
 			}
 			else {
