@@ -13,91 +13,42 @@ namespace Enxel
 {
 
 
-void Enxel::StartEngine()
-{
-    m_Window = std::unique_ptr<IWindow>(IWindow::Create(WindowProperties()));
-    m_Renderer = std::unique_ptr<IRenderer>(IRenderer::Create());
-    m_Renderer->Initialize(m_Window->GetSDLWindow());
-
-
-    //m_VertexBuffer = std::unique_ptr<VertexBuffer>(VertexBuffer::Create());
-	//m_IndexBuffer = std::unique_ptr<IndexBuffer>(IndexBuffer::Create());
-
-	World* world = new World();
-    world->Generate(6,6);
-    
-
-	for (Chunk& chunk : world->chunks)
-	{
-        std::vector<Vertex> vertices;
-        std::vector<uint32_t> indices;
-        chunk.draw(vertices, indices);
-        chunk.setVertexBuffer(m_Renderer->CreateVertexBuffer(vertices));
-        chunk.setIndexBuffer(m_Renderer->CreateIndexBuffer(indices));
-	}
-    
-
-    while (true)
+    void Enxel::StartEngine()
     {
-		if (!m_Window->Tick())
-        {
-            m_Window->Cleanup();
-			break; 
-		}
+        m_Window = std::unique_ptr<IWindow>(IWindow::Create(WindowProperties()));
+        m_Renderer = std::unique_ptr<IRenderer>(IRenderer::Create());
+        m_Renderer->Initialize(m_Window->GetSDLWindow());
 
-        for (Chunk& chunk : world->chunks)
-        {
-            m_Renderer->Submit(chunk.getVertexBuffer(), chunk.getIndexBuffer());
-        }
-        m_Renderer->RenderFrame();
-    }
-
-    m_Renderer->Shutdown();
-    delete world;
-
-    /*
-    if (renderer == nullptr)
-    {
-        RendererModule rendererModule;
-        if (!rendererModule.load("VulkanRenderer.dll"))
-        {
-            std::cout << "Failed to load renderer module\n";
-        }
-
-        IRenderer* renderer = rendererModule.instance;
-    }
-    renderer->Init();
-
-
+	    World* world = new World();
+        world->Generate(6,6);
     
-    while (!bQuit) {
-        // Handle events on queue
-        while (SDL_PollEvent(&e) != 0) {
-            // close the window when user alt-f4s or clicks the X button
-            if (e.type == SDL_EVENT_QUIT)
+
+	    for (Chunk& chunk : world->chunks)
+	    {
+            std::vector<Vertex> vertices;
+            std::vector<uint32_t> indices;
+            chunk.draw(vertices, indices);
+            chunk.setVertexBuffer(m_Renderer->CreateVertexBuffer(vertices));
+            chunk.setIndexBuffer(m_Renderer->CreateIndexBuffer(indices));
+	    }
+    
+
+        while (true)
+        {
+		    if (!m_Window->Tick())
             {
-                bQuit = true;
-            }
+                m_Window->Cleanup();
+			    break; 
+		    }
 
-            if (e.type == SDL_EVENT_WINDOW_MINIMIZED) {
-                stop_rendering = true;
+            for (Chunk& chunk : world->chunks)
+            {
+                m_Renderer->Submit(chunk.getVertexBuffer(), chunk.getIndexBuffer());
             }
-            if (e.type == SDL_EVENT_WINDOW_RESTORED) {
-                stop_rendering = false;
-            }
-
+            m_Renderer->RenderFrame();
         }
 
-        if (renderer->StopRendering()) {
-            // throttle the speed 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
-        }
-
-        renderer->RenderFrame();
+        m_Renderer->Shutdown();
+        delete world;
     }
-    cleanup();
-
-    */
-}
 }
