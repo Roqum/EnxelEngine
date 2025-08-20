@@ -17,6 +17,8 @@ namespace Enxel
 
     void VulkanVertexBuffer::Unbind() const
     {
+        vkDestroyBuffer(*m_Vkdevice, m_VkBuffer, nullptr);
+        vkFreeMemory(*m_Vkdevice, m_VkBufferMemory, nullptr);
     }
 
     VulkanIndexBuffer::VulkanIndexBuffer(VkDeviceSize size, VkDevice* device, VkBuffer buffer, VkDeviceMemory deviceMemory)
@@ -30,6 +32,8 @@ namespace Enxel
 
     void VulkanIndexBuffer::Unbind() const
     {
+        vkDestroyBuffer(*m_Vkdevice, m_VkBuffer, nullptr);
+        vkFreeMemory(*m_Vkdevice, m_VkBufferMemory, nullptr);
     }
 
 }

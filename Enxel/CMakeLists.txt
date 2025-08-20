@@ -3,6 +3,8 @@ Enxel.cpp
 Enxel.h
 Window/*.cpp
 Window/*.h
+World/*.cpp
+World/*.h
 )
 
 
