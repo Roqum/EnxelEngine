@@ -14,6 +14,7 @@ namespace Enxel
 		Chunk(int x, int y, int z, const WorldSettings& settings, const PerlinNoise& perlinNoise);
 
 		void draw(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+		void Cleanup();
 
 		inline void setVertexBuffer(VertexBuffer* vb) { m_VertexBuffer = vb; }
 		inline void setIndexBuffer(IndexBuffer* ib) { m_IndexBuffer = ib; }

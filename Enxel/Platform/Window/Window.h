@@ -10,8 +10,8 @@ struct WindowProperties
 	unsigned int height;
 
 	WindowProperties(const char* title = "Enxel Engine", 
-		unsigned int width = 1000,
-		unsigned int height = 800) 
+		unsigned int width = 1800,
+		unsigned int height = 1000) 
 		: title(title), width(width), height(height) 
 	{
 	}

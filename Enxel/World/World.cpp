@@ -21,4 +21,12 @@ namespace Enxel
 			}
 		}
 	}
+	void World::Shutdown()
+	{
+		for (Chunk& chunk : chunks)
+		{
+			chunk.Cleanup();
+		}
+		chunks.clear();
+	}
 }

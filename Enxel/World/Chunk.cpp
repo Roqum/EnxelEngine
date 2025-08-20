@@ -79,4 +79,18 @@ namespace Enxel
 			
 		}
 	}
+	void Chunk::Cleanup()
+	{
+		if (m_VertexBuffer) {
+			m_VertexBuffer->Unbind();
+			delete m_VertexBuffer;
+			m_VertexBuffer = nullptr;
+		}
+		if (m_IndexBuffer) {
+			m_IndexBuffer->Unbind();
+			delete m_IndexBuffer;
+			m_IndexBuffer = nullptr;
+		}
+		voxels.clear();
+	}
 }

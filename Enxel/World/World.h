@@ -13,6 +13,7 @@ namespace Enxel
 		virtual ~World() = default;
 
 		void Generate(int length, int width);
+		void Shutdown();
 
 		//inline std::vector<Chunk>& GetChunks() { return m_Chunks; }
 		std::vector<Chunk> chunks;

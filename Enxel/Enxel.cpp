@@ -20,7 +20,7 @@ namespace Enxel
         m_Renderer->Initialize(m_Window->GetSDLWindow());
 
 	    World* world = new World();
-        world->Generate(6,6);
+        world->Generate(3,3);
     
 
 	    for (Chunk& chunk : world->chunks)
@@ -49,6 +49,7 @@ namespace Enxel
         }
 
         m_Renderer->Shutdown();
+        world->Shutdown(); // TODO: Fix cleanup
         delete world;
     }
 }
