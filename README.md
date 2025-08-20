@@ -32,3 +32,8 @@ Follow instructions on [Vulkan Tutorial](https://vulkan-tutorial.com/Development
     ```
 5. Open the generated Visual Studio solution from the `build` folder.
 6. Build and run the project from Visual Studio.
+
+## Showcase
+See here for some more details: 
+[david-burgstaller.de/project/voxelengine](https://david-burgstaller.de/project/voxelengine/)
+
