@@ -9,10 +9,10 @@ PerlinNoise::PerlinNoise(int seed) : seed(seed), pseudoRandomNumber(seed)
 
 float PerlinNoise::Noise(float x, float y) const
 {
-    int x0 = (int)x;
-    int x1 = (int)x + 1;
-    int y0 = (int)y;
-    int y1 = (int)y + 1;
+    int x0 = (int)std::floor(x);
+    int x1 = (int)x0 + 1;
+    int y0 = (int)std::floor(y);
+    int y1 = (int)y0 + 1;
 
     glm::vec2 g00 = RandomGradient(x0, y0);
     glm::vec2 g10 = RandomGradient(x1, y0);
