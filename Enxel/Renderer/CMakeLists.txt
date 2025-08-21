@@ -12,7 +12,7 @@ add_library(Renderer STATIC ${Renderer_SRC})
 target_include_directories(Renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(Vulkan REQUIRED)
-target_link_libraries(Renderer PUBLIC SDL3::SDL3 Vulkan::Vulkan )
+target_link_libraries(Renderer PUBLIC SDL3::SDL3 Vulkan::Vulkan imgui)
 
 #target_precompile_headers(Renderer REUSE_FROM pchCommon)
 

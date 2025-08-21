@@ -35,7 +35,7 @@ add_subdirectory(Renderer)
 #add_subdirectory(SDL EXCLUDE_FROM_ALL)  
 
 
-target_link_libraries(Enxel PUBLIC SDL3::SDL3 glm::glm)
+target_link_libraries(Enxel PUBLIC SDL3::SDL3 glm::glm imgui)
 target_link_libraries(Enxel PRIVATE Renderer PlatformWindow )
 
 #target_precompile_headers(Enxel REUSE_FROM pchCommon)

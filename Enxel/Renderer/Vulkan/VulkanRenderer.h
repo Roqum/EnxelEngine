@@ -17,6 +17,7 @@
 
 #include "Vulkan/VulkanBuffer.h"
 #include "VulkanBuffer.h"
+#include <imgui.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -28,6 +29,12 @@ const bool enableValidationLayers = true;
 #endif
 
 constexpr unsigned int FRAME_OVERLAP = 2;
+
+struct ImGuiVertex {
+	glm::vec2 pos;    
+	glm::vec2 uv;     
+	uint32_t col;     
+};
 
 static VkVertexInputBindingDescription getBindingDescription() {
 	VkVertexInputBindingDescription bindingDescription{};
@@ -106,7 +113,7 @@ struct RenderCommand
 {
 public:
 	// Inherited via IRenderer
-	void Initialize(SDL_Window* sdlWindow);
+	void Initialize(SDL_Window* sdlWindow, ImGuiContext* imguiContext);
 	virtual void BeginScene() override;
 	virtual void EndScene() override;
 	void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) override;
@@ -125,8 +132,10 @@ private:
 	void CreateSwapChain();
 	void CreateImageViews();
 	void CreateRenderPass();
+	void CreateUIRenderPass();
 	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
+	void CreateUIGraphicsPipeline();
 	void CreateCommandStructure();
 	void CreateDepthResources();
 	void CreateFramebuffers();
@@ -137,7 +146,9 @@ private:
 	//void CreateIndexBuffer();
 	void CreateUniformBuffers();
 	void CreateDescriptorPool();
+	void CreateImGuiDescriptorPool();
 	void CreateDescriptorSets();
+	void CreateImGuiDescriptorSets();
 	void CreateSyncObjects();
 
 	bool IsDeviceSuitable(VkPhysicalDevice device);
@@ -190,12 +201,26 @@ private:
 	std::vector<VkImage> m_VkSwapChainImages;
 	std::vector<VkImageView> m_VkSwapChainImageViews;
 	std::vector<VkFramebuffer> m_VkSwapChainFramebuffers;
+	std::vector<VkFramebuffer> m_VkSwapChainFramebuffersUI;
 
+
+	VkDescriptorSet m_ImGuiFontDescriptorSet;
 	VkDescriptorPool m_VkDescriptorPool;
 	VkDescriptorSetLayout m_VkDescriptorSetLayout;
 	VkPipeline m_VkGraphicsPipeline;
 	VkRenderPass m_VkRenderPass;
 	VkPipelineLayout m_VkPipelineLayout;
+
+	VkDescriptorSet m_VkImGuiDescriptorSet;
+	VkDescriptorPool m_VkImGuiDescriptorPool;
+	VkDescriptorSetLayout m_VkImGuiDescriptorSetLayout;
+	VkRenderPass m_VkRenderPassUI;
+	VkPipelineLayout m_VkImGuiPipelineLayout;
+	VkPipeline m_VkImGuiPipeline;
+
+	VkSampler m_VkImGuiFontSampler;
+	VkImageView m_VkImGuiFontImageView;
+
 
 	VkCommandPool m_VkTransferCommandPool;
 

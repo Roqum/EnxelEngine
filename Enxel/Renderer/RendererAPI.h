@@ -2,7 +2,7 @@
 #include <SDL3/SDL_video.h>
 #include "Buffer.h"
 #include <memory>
-
+#include "imgui.h"
 namespace Enxel
 {
 
@@ -19,7 +19,7 @@ namespace Enxel
 
         static IRenderer* Create();
 
-        virtual void Initialize(SDL_Window* sdlWindow) = 0;
+        virtual void Initialize(SDL_Window* sdlWindow, ImGuiContext* imguiContext) = 0;
         virtual void BeginScene() = 0;
         virtual void EndScene() = 0;
         virtual void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) = 0;
@@ -35,5 +35,7 @@ namespace Enxel
     private:
 	
         static RendererSelection s_RendererSelection;
+
+ 
     };
 }
