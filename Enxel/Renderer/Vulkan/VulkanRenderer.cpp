@@ -1,4 +1,4 @@
-#include "Vulkan/VulkanRenderer.h"
+﻿#include "Vulkan/VulkanRenderer.h"
 #include <iostream>
 
 #include "SDL3/SDL.h"
@@ -168,14 +168,14 @@ namespace Enxel
         CreateLogicalDevice();
         CreateSwapChain();
         CreateImageViews();
-        CreateRenderPass();
-        CreateUIRenderPass();
+        //CreateRenderPass();
+        //CreateUIRenderPass();
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
-        CreateUIGraphicsPipeline();
+        CreateImGuiGraphicsPipeline();
 	    CreateCommandStructure();
         CreateDepthResources();
-        CreateFramebuffers();
+        //CreateFramebuffers();
         CreateTextureImage();
         CreateTextureImageView();
         CreateTextureSampler();
@@ -268,21 +268,13 @@ namespace Enxel
         vkDestroyImage(m_VkDevice, m_VkDepthImage, nullptr);
         vkFreeMemory(m_VkDevice, m_VkDepthImageMemory, nullptr);
 
-        for (auto framebuffer : m_VkSwapChainFramebuffers) {
-            vkDestroyFramebuffer(m_VkDevice, framebuffer, nullptr);
-        }
-        for (auto imageView : m_VkSwapChainImageViews) {
-            vkDestroyImageView(m_VkDevice, imageView, nullptr);
-        }
         vkDestroySwapchainKHR(m_VkDevice, m_VkSwapChain, nullptr);
 
         vkDestroyPipeline(m_VkDevice, m_VkGraphicsPipeline, nullptr);
         vkDestroyPipelineLayout(m_VkDevice, m_VkPipelineLayout, nullptr);
-        vkDestroyRenderPass(m_VkDevice, m_VkRenderPass, nullptr);
 
         vkDestroyPipeline(m_VkDevice, m_VkImGuiPipeline, nullptr);
         vkDestroyPipelineLayout(m_VkDevice, m_VkImGuiPipelineLayout, nullptr);
-        vkDestroyRenderPass(m_VkDevice, m_VkRenderPassUI, nullptr);
 
         vkDestroyDescriptorPool(m_VkDevice, m_VkDescriptorPool, nullptr);
 
@@ -298,12 +290,6 @@ namespace Enxel
             vkDestroyBuffer(m_VkDevice, m_VkFrames[i].vkUniformBuffers, nullptr);
             vkFreeMemory(m_VkDevice, m_VkFrames[i].vkUniformBuffersMemory, nullptr);
         }
-
-        //vkDestroyBuffer(m_VkDevice, m_VkIndexBuffer, nullptr);
-        //vkFreeMemory(m_VkDevice, m_VkIndexBufferMemory, nullptr);
-
-        //vkDestroyBuffer(m_VkDevice, m_VkVertexBuffer, nullptr);
-        //vkFreeMemory(m_VkDevice, m_VkVertexBufferMemory, nullptr);
 
         for (size_t i = 0; i < FRAME_OVERLAP; i++)
         {
@@ -426,6 +412,9 @@ namespace Enxel
         VkPhysicalDeviceFeatures deviceFeatures{};
         deviceFeatures.samplerAnisotropy = VK_TRUE;
 
+        VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeature{};
+        dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+        dynamicRenderingFeature.dynamicRendering = VK_TRUE;
 
         VkDeviceCreateInfo deviceCreateInfo{};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -434,6 +423,7 @@ namespace Enxel
         deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
         deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(m_RequiredDeviceExtensions.size());
         deviceCreateInfo.ppEnabledExtensionNames = m_RequiredDeviceExtensions.data();
+        deviceCreateInfo.pNext = &dynamicRenderingFeature;
 
         if (enableValidationLayers) {
             deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
@@ -449,8 +439,6 @@ namespace Enxel
         vkGetDeviceQueue(m_VkDevice, m_VkQueueFamilyIndicies.graphicsFamily.value(), 0, &m_VkGraphicsQueue);
         vkGetDeviceQueue(m_VkDevice, m_VkQueueFamilyIndicies.presentFamily.value(), 0, &m_VkPresentQueue);
         vkGetDeviceQueue(m_VkDevice, m_VkQueueFamilyIndicies.transferFamily.value(), 0, &m_VkTransferQueue);
-
-
     }
 
     void VulkanRenderer::CreateSwapChain() {
@@ -535,100 +523,6 @@ namespace Enxel
         }
     }
 
-    void VulkanRenderer::CreateRenderPass()
-    {
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = m_VkSwapChainImageFormat;
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = FindDepthFormat();
-        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference depthAttachmentRef{};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-        std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
-        VkRenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
-
-        if (vkCreateRenderPass(m_VkDevice, &renderPassInfo, nullptr, &m_VkRenderPass) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create render pass!");
-        }
-    }
-
-    void VulkanRenderer::CreateUIRenderPass()
-    {
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = m_VkSwapChainImageFormat;
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-
-        std::array<VkAttachmentDescription, 1> attachments = { colorAttachment };
-        VkRenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 0;
-
-        if (vkCreateRenderPass(m_VkDevice, &renderPassInfo, nullptr, &m_VkRenderPassUI) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create render pass!");
-        }
-    }
-
     void VulkanRenderer::CreateDescriptorSetLayout()
     {
         // -------------- scene descriptor set layout --------------
@@ -676,7 +570,6 @@ namespace Enxel
 
     void VulkanRenderer::CreateGraphicsPipeline()
     {
-		// -------------------- Scene Pipeline --------------------
         auto vertShaderCode = readFile("shaders/vert.spv");
         auto fragShaderCode = readFile("shaders/frag.spv");
 
@@ -738,6 +631,7 @@ namespace Enxel
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewportState.viewportCount = 1;
         viewportState.scissorCount = 1;
+
 
         VkPipelineRasterizationStateCreateInfo rasterizer{};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -806,11 +700,20 @@ namespace Enxel
         depthStencil.back = {}; // Optional
 
 
+        VkPipelineRenderingCreateInfo renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+        renderingInfo.pNext = VK_NULL_HANDLE;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachmentFormats = &m_VkSwapChainImageFormat;
+        renderingInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT; // optional if you use depth
+        renderingInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;     // ❗ no stencil -> UNDEFINED
+
+
         VkGraphicsPipelineCreateInfo pipelineInfo{};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipelineInfo.stageCount = 2;
         pipelineInfo.pStages = shaderStages;
-
+        pipelineInfo.pNext = &renderingInfo;
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssembly;
         pipelineInfo.pViewportState = &viewportState;
@@ -819,14 +722,14 @@ namespace Enxel
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.pDynamicState = &dynamicState;
+        pipelineInfo.renderPass = VK_NULL_HANDLE;
 
         pipelineInfo.layout = m_VkPipelineLayout;
 
-        pipelineInfo.renderPass = m_VkRenderPass;
-        pipelineInfo.subpass = 0;
-
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; 
         pipelineInfo.basePipelineIndex = -1; 
+
+        
 
         if (vkCreateGraphicsPipelines(m_VkDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_VkGraphicsPipeline) != VK_SUCCESS) {
             throw std::runtime_error("failed to create graphics pipeline!");
@@ -839,7 +742,8 @@ namespace Enxel
         
     }
 
-    void VulkanRenderer::CreateUIGraphicsPipeline()
+
+    void VulkanRenderer::CreateImGuiGraphicsPipeline()
     {
         // -------------------- imgui UI Pipeline --------------------
 
@@ -910,7 +814,7 @@ namespace Enxel
         vertexInputInfoUI.pVertexBindingDescriptions = &bindingDescUI;
         vertexInputInfoUI.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrDescsUI.size());
         vertexInputInfoUI.pVertexAttributeDescriptions = attrDescsUI.data();
-   
+
 
         VkPipelineRasterizationStateCreateInfo rasterizerUI{};
         rasterizerUI.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -918,7 +822,7 @@ namespace Enxel
         rasterizerUI.rasterizerDiscardEnable = VK_FALSE;
         rasterizerUI.polygonMode = VK_POLYGON_MODE_FILL;
         rasterizerUI.lineWidth = 1.0f;
-        rasterizerUI.cullMode = VK_CULL_MODE_NONE; 
+        rasterizerUI.cullMode = VK_CULL_MODE_NONE;
         rasterizerUI.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         rasterizerUI.depthBiasEnable = VK_FALSE;
 
@@ -984,8 +888,19 @@ namespace Enxel
             throw std::runtime_error("failed to create ImGui pipeline layout!");
         }
 
+        VkPipelineRenderingCreateInfo renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+        renderingInfo.colorAttachmentCount = 1;
+        VkFormat colorFormat = m_VkSwapChainImageFormat;
+        renderingInfo.pColorAttachmentFormats = &colorFormat;
+        // No depth/stencil for ImGui:
+        renderingInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+        renderingInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
+
+
         VkGraphicsPipelineCreateInfo pipelineInfoUI{};
         pipelineInfoUI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineInfoUI.pNext = &renderingInfo; 
         pipelineInfoUI.stageCount = 2;
         pipelineInfoUI.pStages = shaderStagesUI;
         pipelineInfoUI.pVertexInputState = &vertexInputInfoUI;
@@ -997,12 +912,12 @@ namespace Enxel
         pipelineInfoUI.pColorBlendState = &colorBlendingUI;
         pipelineInfoUI.pDynamicState = &dynamicStateInfoUI;
         pipelineInfoUI.layout = m_VkImGuiPipelineLayout;
-        pipelineInfoUI.renderPass = m_VkRenderPassUI;
-        pipelineInfoUI.subpass = 0;
+        pipelineInfoUI.renderPass = VK_NULL_HANDLE; 
+
 
         if (vkCreateGraphicsPipelines(m_VkDevice, VK_NULL_HANDLE, 1, &pipelineInfoUI, nullptr, &m_VkImGuiPipeline) != VK_SUCCESS) {
             throw std::runtime_error("failed to create ImGui graphics pipeline!");
-        }        
+        }
         vkDestroyShaderModule(m_VkDevice, vertShaderModuleUI, nullptr);
         vkDestroyShaderModule(m_VkDevice, fragShaderModuleUI, nullptr);
     }
@@ -1053,54 +968,6 @@ namespace Enxel
 
     }
 
-    void VulkanRenderer::CreateFramebuffers()
-    {
-        // ------------------ Scene framebuffers ------------------
-        m_VkSwapChainFramebuffers.resize(m_VkSwapChainImageViews.size());
-
-        for (size_t i = 0; i < m_VkSwapChainImageViews.size(); i++) {
-            std::array<VkImageView, 2> attachments = {
-                m_VkSwapChainImageViews[i],
-                m_VkDepthImageView
-            };
-
-
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = m_VkRenderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = m_VkSwapChainExtent.width;
-            framebufferInfo.height = m_VkSwapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            if (vkCreateFramebuffer(m_VkDevice, &framebufferInfo, nullptr, &m_VkSwapChainFramebuffers[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create framebuffer!");
-            }
-        }
-
-        // --------------------- UI framebuffers ---------------------
-        m_VkSwapChainFramebuffersUI.resize(m_VkSwapChainImageViews.size());
-
-        for (size_t i = 0; i < m_VkSwapChainImageViews.size(); i++) {
-            std::array<VkImageView, 1> attachments = {
-                m_VkSwapChainImageViews[i],
-            };
-
-            VkFramebufferCreateInfo framebufferInfoUI{};
-            framebufferInfoUI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfoUI.renderPass = m_VkRenderPassUI;
-            framebufferInfoUI.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfoUI.pAttachments = attachments.data();
-            framebufferInfoUI.width = m_VkSwapChainExtent.width;
-            framebufferInfoUI.height = m_VkSwapChainExtent.height;
-            framebufferInfoUI.layers = 1;
-
-            if (vkCreateFramebuffer(m_VkDevice, &framebufferInfoUI, nullptr, &m_VkSwapChainFramebuffersUI[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create UI framebuffer!");
-            }
-        }
-    }
 
     void VulkanRenderer::CreateTextureImage()
     {
@@ -1790,24 +1657,40 @@ namespace Enxel
             throw std::runtime_error("failed to begin recording command buffer!");
         }
 
-        // ----------------- Scene Render Pass -----------------
+        // ----------------- Scene Renderering -----------------
 
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = m_VkRenderPass;
-        renderPassInfo.framebuffer = m_VkSwapChainFramebuffers[imageIndex];
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = m_VkSwapChainExtent;
+        // Color attachment (swapchain image)
+        VkRenderingAttachmentInfoKHR colorAttachment{};
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        colorAttachment.imageView = m_VkSwapChainImageViews[imageIndex];
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+        colorAttachment.clearValue = clearColor;
 
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
-        clearValues[1].depthStencil = { 1.0f, 0 };
+        // Depth attachment
+        VkRenderingAttachmentInfoKHR depthAttachment{};
+        depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        depthAttachment.imageView = m_VkDepthImageView;
+        depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        VkClearValue clearDepth = { 1.0f, 0 };
+        depthAttachment.clearValue = clearDepth;
 
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
+        // Rendering info
+        VkRenderingInfoKHR renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+        renderingInfo.renderArea.offset = { 0, 0 };
+        renderingInfo.renderArea.extent = m_VkSwapChainExtent;
+        renderingInfo.layerCount = 1;
+        renderingInfo.colorAttachmentCount = 1;
+        renderingInfo.pColorAttachments = &colorAttachment;
+        renderingInfo.pDepthAttachment = &depthAttachment;
 
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRendering(commandBuffer, &renderingInfo);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkGraphicsPipeline);
 
         VkViewport viewport{};
@@ -1838,48 +1721,30 @@ namespace Enxel
             vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderCommand.indexBuffer->m_Size), 1, 0, 0, 0);
         }
 
-        vkCmdEndRenderPass(commandBuffer); 
+        vkCmdEndRendering(commandBuffer);
 
-        
-        // ------ Barrier between scene and UI render pass ------
-        VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // scene pass final layout
-        barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL; // UI pass initial layout
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = m_VkSwapChainImages[imageIndex];
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+       
 
-        vkCmdPipelineBarrier(
-            commandBuffer,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
+        // ------------------- UI Rendering -------------------
+        VkRenderingAttachmentInfo colorAttribure{};
+        colorAttribure.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        colorAttribure.imageView = m_VkSwapChainImageViews[imageIndex];
+        colorAttribure.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttribure.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;   // keep scene result under UI
+        colorAttribure.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttribure.clearValue.color = { 0,0,0,1 }; // ignored because LOAD
 
-        // ------------------- UI Render Pass -------------------
-        VkRenderPassBeginInfo uiPassInfo = {};
-        uiPassInfo.renderPass = m_VkRenderPassUI;
-        uiPassInfo.framebuffer = m_VkSwapChainFramebuffersUI[imageIndex];
-        uiPassInfo.renderArea.offset = { 0, 0 };
-        uiPassInfo.renderArea.extent = m_VkSwapChainExtent;
-        uiPassInfo.clearValueCount = 0; 
-        uiPassInfo.pClearValues = nullptr;
-        
-        vkCmdBeginRenderPass(commandBuffer, &uiPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        VkRenderingInfo ImguiRenderingInfo{};
+        ImguiRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        ImguiRenderingInfo.renderArea.offset = { 0,0 };
+        ImguiRenderingInfo.renderArea.extent = m_VkSwapChainExtent;
+        ImguiRenderingInfo.layerCount = 1;
+        ImguiRenderingInfo.colorAttachmentCount = 1;
+        ImguiRenderingInfo.pColorAttachments = &colorAttribure;
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkImGuiPipeline);
+        vkCmdBeginRendering(commandBuffer, &ImguiRenderingInfo);
 
+        // Viewport/scissor for UI
         VkViewport viewportUI{};
         viewportUI.x = 0.0f;
         viewportUI.y = 0.0f;
@@ -1894,8 +1759,79 @@ namespace Enxel
         scissorUI.extent = m_VkSwapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissorUI);
 
-        vkCmdEndRenderPass(commandBuffer);
+        // Let ImGui draw here
+        //ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+        ImGuiFrameData& frame = m_VkImGuiFrames[imageIndex];
 
+        ImDrawData* drawData = ImGui::GetDrawData();
+
+        if (!drawData || drawData->TotalVtxCount == 0)
+        {
+            vkCmdEndRendering(commandBuffer);
+
+            if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+                throw std::runtime_error("failed to record command buffer!");
+            }
+
+            return;
+        }
+
+        size_t vertexSize = drawData->TotalVtxCount * sizeof(ImDrawVert);
+        size_t indexSize = drawData->TotalIdxCount * sizeof(ImDrawIdx);
+
+        void* vtxDst;
+        vkMapMemory(m_VkDevice, frame.vertexBufferMemory, 0, vertexSize, 0, &vtxDst);
+
+        void* idxDst;
+        vkMapMemory(m_VkDevice, frame.indexBufferMemory, 0, indexSize, 0, &idxDst);
+
+        for (int n = 0; n < drawData->CmdListsCount; n++)
+        {
+            const ImDrawList* cmdList = drawData->CmdLists[n];
+            memcpy(vtxDst, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
+            memcpy(idxDst, cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
+            vtxDst = (char*)vtxDst + cmdList->VtxBuffer.Size * sizeof(ImDrawVert);
+            idxDst = (char*)idxDst + cmdList->IdxBuffer.Size * sizeof(ImDrawIdx);
+        }
+
+        vkUnmapMemory(m_VkDevice, frame.vertexBufferMemory);
+        vkUnmapMemory(m_VkDevice, frame.indexBufferMemory);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkImGuiPipeline);
+
+        VkBuffer vertexBuffers[] = { frame.vertexBuffer };
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, frame.indexBuffer, 0, sizeof(ImDrawIdx) == 2 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkImGuiPipelineLayout, 0, 1, &m_VkImGuiDescriptorSet, 0, nullptr);
+
+        int vtxOffset = 0;
+        int idxOffset = 0;
+
+        for (int n = 0; n < drawData->CmdListsCount; n++)
+        {
+            const ImDrawList* cmdList = drawData->CmdLists[n];
+
+            for (int cmd_i = 0; cmd_i < cmdList->CmdBuffer.Size; cmd_i++)
+            {
+                const ImDrawCmd* pcmd = &cmdList->CmdBuffer[cmd_i];
+
+                VkRect2D scissor;
+                scissor.offset.x = static_cast<int32_t>(pcmd->ClipRect.x);
+                scissor.offset.y = static_cast<int32_t>(pcmd->ClipRect.y);
+                scissor.extent.width = static_cast<uint32_t>(pcmd->ClipRect.z - pcmd->ClipRect.x);
+                scissor.extent.height = static_cast<uint32_t>(pcmd->ClipRect.w - pcmd->ClipRect.y);
+                vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+                vkCmdDrawIndexed(commandBuffer, pcmd->ElemCount, 1, idxOffset, vtxOffset, 0);
+
+                idxOffset += pcmd->ElemCount;
+            }
+
+            vtxOffset += cmdList->VtxBuffer.Size;
+        }
+
+        vkCmdEndRendering(commandBuffer);
 
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");

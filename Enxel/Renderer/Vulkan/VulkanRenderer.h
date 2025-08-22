@@ -36,6 +36,13 @@ struct ImGuiVertex {
 	uint32_t col;     
 };
 
+struct ImGuiFrameData {
+	VkBuffer vertexBuffer;
+	VkDeviceMemory vertexBufferMemory;
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
+};
+
 static VkVertexInputBindingDescription getBindingDescription() {
 	VkVertexInputBindingDescription bindingDescription{};
 	bindingDescription.binding = 0;
@@ -131,19 +138,14 @@ private:
 	void CreateLogicalDevice();
 	void CreateSwapChain();
 	void CreateImageViews();
-	void CreateRenderPass();
-	void CreateUIRenderPass();
 	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
-	void CreateUIGraphicsPipeline();
+	void CreateImGuiGraphicsPipeline();
 	void CreateCommandStructure();
 	void CreateDepthResources();
-	void CreateFramebuffers();
 	void CreateTextureImage();
 	void CreateTextureImageView();
 	void CreateTextureSampler();
-	//void CreateVertexBuffer();
-	//void CreateIndexBuffer();
 	void CreateUniformBuffers();
 	void CreateDescriptorPool();
 	void CreateImGuiDescriptorPool();
@@ -200,21 +202,18 @@ private:
 	VkSwapchainKHR m_VkSwapChain;
 	std::vector<VkImage> m_VkSwapChainImages;
 	std::vector<VkImageView> m_VkSwapChainImageViews;
-	std::vector<VkFramebuffer> m_VkSwapChainFramebuffers;
-	std::vector<VkFramebuffer> m_VkSwapChainFramebuffersUI;
+
 
 
 	VkDescriptorSet m_ImGuiFontDescriptorSet;
 	VkDescriptorPool m_VkDescriptorPool;
 	VkDescriptorSetLayout m_VkDescriptorSetLayout;
 	VkPipeline m_VkGraphicsPipeline;
-	VkRenderPass m_VkRenderPass;
 	VkPipelineLayout m_VkPipelineLayout;
 
 	VkDescriptorSet m_VkImGuiDescriptorSet;
 	VkDescriptorPool m_VkImGuiDescriptorPool;
 	VkDescriptorSetLayout m_VkImGuiDescriptorSetLayout;
-	VkRenderPass m_VkRenderPassUI;
 	VkPipelineLayout m_VkImGuiPipelineLayout;
 	VkPipeline m_VkImGuiPipeline;
 
@@ -236,12 +235,8 @@ private:
 	VkDeviceMemory m_VkDepthImageMemory;
 	VkImageView m_VkDepthImageView;
 
-	//VkCommandBuffer vkCommandBuffer;
-	//VkSemaphore vkImageAvailableSemaphore;
-	//VkSemaphore vkRenderFinishedSemaphore;
-	//VkFence vkInFlightFence;
-
 	VkFrameData m_VkFrames[FRAME_OVERLAP];
+	ImGuiFrameData m_VkImGuiFrames[FRAME_OVERLAP];
 	uint32_t m_CurrentFrame = 0;
 
 	std::vector<VkCommandBuffer> m_VkCommandBuffers;
