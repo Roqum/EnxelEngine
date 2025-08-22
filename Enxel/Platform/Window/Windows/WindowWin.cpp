@@ -12,15 +12,7 @@ WindowWin::WindowWin(const WindowProperties& props)
 
 bool WindowWin::Tick()
 {
-	bool running = true;
-	SDL_Event event;
-
-	SDL_PollEvent(&event);
-	if (event.type == SDL_EVENT_QUIT) {
-		// TODO: Trigger close window event
-		running = false;
-	}
-	return running;
+	return false;
 }
 
 void WindowWin::Cleanup()

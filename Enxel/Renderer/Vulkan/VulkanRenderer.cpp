@@ -168,19 +168,15 @@ namespace Enxel
         CreateLogicalDevice();
         CreateSwapChain();
         CreateImageViews();
-        //CreateRenderPass();
-        //CreateUIRenderPass();
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
         CreateImGuiGraphicsPipeline();
 	    CreateCommandStructure();
         CreateDepthResources();
-        //CreateFramebuffers();
         CreateTextureImage();
         CreateTextureImageView();
         CreateTextureSampler();
-        //CreateVertexBuffer();
-        //CreateIndexBuffer();
+        CreateImGuiBuffers();
         CreateUniformBuffers();
         CreateDescriptorPool();
         CreateDescriptorSets();
@@ -215,11 +211,15 @@ namespace Enxel
         uint32_t imageIndex;
         vkAcquireNextImageKHR(m_VkDevice, m_VkSwapChain, UINT64_MAX, m_VkFrames[m_CurrentFrame].vkImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
         UpdateUniformBuffer(m_CurrentFrame);
+
+        ImDrawData* drawData = ImGui::GetDrawData();
+        UploadImGuiBuffers(drawData, m_CurrentFrame);
+
         vkResetFences(m_VkDevice, 1, &m_VkFrames[m_CurrentFrame].vkInFlightFence);
 
         vkResetCommandBuffer(m_VkFrames[m_CurrentFrame].vkMainCommandBuffer, 0);
 
-        RecordCommandBuffer(m_VkFrames[m_CurrentFrame].vkMainCommandBuffer, imageIndex);
+        RecordCommandBuffer(m_VkFrames[m_CurrentFrame].vkMainCommandBuffer, imageIndex, drawData);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1068,6 +1068,31 @@ namespace Enxel
         }
     }
 
+    void VulkanRenderer::CreateImGuiBuffers()
+    {
+
+        for (uint32_t i = 0; i < FRAME_OVERLAP; i++) {
+            VkDeviceSize initialVertexSize = 1024 * 1024;
+            VkDeviceSize initialIndexSize = 1024 * 1024;
+
+            // Create vertex buffer
+            CreateBuffer(initialVertexSize,
+                VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                m_VkImGuiFrames[i].vertexBuffer,
+                m_VkImGuiFrames[i].vertexBufferMemory);
+            m_VkImGuiFrames[i].vertexBufferSize = initialVertexSize;
+
+            // Create index buffer
+            CreateBuffer(initialIndexSize,
+                VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                m_VkImGuiFrames[i].indexBuffer,
+                m_VkImGuiFrames[i].indexBufferMemory);
+            m_VkImGuiFrames[i].indexBufferSize = initialIndexSize;
+        }
+    }
+
     VulkanVertexBuffer* VulkanRenderer::CreateVertexBuffer(std::vector<Vertex>& verticies)
     {
         
@@ -1343,6 +1368,53 @@ namespace Enxel
                 throw std::runtime_error("failed to create semaphores!");
             }
         }
+    }
+
+    void VulkanRenderer::UploadImGuiBuffers(ImDrawData* drawData, uint32_t currentFrame)
+    {
+        if (!drawData || drawData->TotalVtxCount == 0)
+            return;
+
+        ImGuiFrameData& imguiFrameData = m_VkImGuiFrames[currentFrame];
+
+        size_t vertexSize = drawData->TotalVtxCount * sizeof(ImDrawVert);
+        size_t indexSize = drawData->TotalIdxCount * sizeof(ImDrawIdx);
+
+        if (vertexSize > imguiFrameData.vertexBufferSize) {
+            vkDestroyBuffer(m_VkDevice, imguiFrameData.vertexBuffer, nullptr);
+            vkFreeMemory(m_VkDevice, imguiFrameData.vertexBufferMemory, nullptr);
+            CreateBuffer(vertexSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                imguiFrameData.vertexBuffer, imguiFrameData.vertexBufferMemory);
+            imguiFrameData.vertexBufferSize = vertexSize;
+        }
+
+        if (indexSize > imguiFrameData.indexBufferSize) {
+            vkDestroyBuffer(m_VkDevice, imguiFrameData.indexBuffer, nullptr);
+            vkFreeMemory(m_VkDevice, imguiFrameData.indexBufferMemory, nullptr);
+            CreateBuffer(indexSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                imguiFrameData.indexBuffer, imguiFrameData.indexBufferMemory);
+            imguiFrameData.indexBufferSize = indexSize;
+        }
+
+        void* vtxDst;
+        vkMapMemory(m_VkDevice, imguiFrameData.vertexBufferMemory, 0, vertexSize, 0, &vtxDst);
+
+        void* idxDst;
+        vkMapMemory(m_VkDevice, imguiFrameData.indexBufferMemory, 0, indexSize, 0, &idxDst);
+
+        for (int n = 0; n < drawData->CmdListsCount; n++) {
+            const ImDrawList* cmdList = drawData->CmdLists[n];
+            memcpy(vtxDst, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
+            memcpy(idxDst, cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
+            vtxDst = (char*)vtxDst + cmdList->VtxBuffer.Size * sizeof(ImDrawVert);
+            idxDst = (char*)idxDst + cmdList->IdxBuffer.Size * sizeof(ImDrawIdx);
+        }
+
+        vkUnmapMemory(m_VkDevice, imguiFrameData.vertexBufferMemory);
+        vkUnmapMemory(m_VkDevice, imguiFrameData.indexBufferMemory);
+
     }
 
     bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device)
@@ -1664,7 +1736,7 @@ namespace Enxel
         vkFreeCommandBuffers(m_VkDevice, m_VkTransferCommandPool, 1, &commandBuffer);
     }
 
-    void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+    void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, ImDrawData* drawData)
     {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1778,53 +1850,25 @@ namespace Enxel
         }
 
         vkCmdEndRenderingKHR(commandBuffer);
-
-       
-        VkImageMemoryBarrier presentBarrier{};
-        presentBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        presentBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
-        presentBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        presentBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        presentBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        presentBarrier.image = m_VkSwapChainImages[imageIndex];
-        presentBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        presentBarrier.subresourceRange.baseMipLevel = 0;
-        presentBarrier.subresourceRange.levelCount = 1;
-        presentBarrier.subresourceRange.baseArrayLayer = 0;
-        presentBarrier.subresourceRange.layerCount = 1;
-        presentBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        presentBarrier.dstAccessMask = 0;
-
-        vkCmdPipelineBarrier(
-            commandBuffer,
-            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &presentBarrier
-        );
-
-        /*
+      
 
         // ------------------- UI Rendering -------------------
-        VkRenderingAttachmentInfo colorAttribure{};
-        colorAttribure.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-        colorAttribure.imageView = m_VkSwapChainImageViews[imageIndex];
-        colorAttribure.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttribure.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;   // keep scene result under UI
-        colorAttribure.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttribure.clearValue.color = { 0,0,0,1 }; // ignored because LOAD
+        VkRenderingAttachmentInfoKHR imguiColorAttachment{};
+        imguiColorAttachment.sType = colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        imguiColorAttachment.imageView = m_VkSwapChainImageViews[imageIndex];
+        imguiColorAttachment.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        imguiColorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;   
+        imguiColorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 
-        VkRenderingInfo ImguiRenderingInfo{};
-        ImguiRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
-        ImguiRenderingInfo.renderArea.offset = { 0,0 };
-        ImguiRenderingInfo.renderArea.extent = m_VkSwapChainExtent;
-        ImguiRenderingInfo.layerCount = 1;
-        ImguiRenderingInfo.colorAttachmentCount = 1;
-        ImguiRenderingInfo.pColorAttachments = &colorAttribure;
+        VkRenderingInfoKHR imguiRenderingInfo{};
+        imguiRenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+        imguiRenderingInfo.renderArea.offset = { 0,0 };
+        imguiRenderingInfo.renderArea.extent = m_VkSwapChainExtent;
+        imguiRenderingInfo.layerCount = 1;
+        imguiRenderingInfo.colorAttachmentCount = 1;
+        imguiRenderingInfo.pColorAttachments = &imguiColorAttachment;
 
-        vkCmdBeginRenderingKHR(commandBuffer, &ImguiRenderingInfo);
+        vkCmdBeginRenderingKHR(commandBuffer, &imguiRenderingInfo);
 
         // Viewport/scissor for UI
         VkViewport viewportUI{};
@@ -1841,45 +1885,26 @@ namespace Enxel
         scissorUI.extent = m_VkSwapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissorUI);
 
+        ImGuiPushConstant imguiPushConstant;
+        imguiPushConstant.scale.x = 2.0f / drawData->DisplaySize.x;
+        imguiPushConstant.scale.y = 2.0f / drawData->DisplaySize.y;
+        imguiPushConstant.translate.x = -1.0f - drawData->DisplayPos.x * imguiPushConstant.scale.x;
+        imguiPushConstant.translate.y = -1.0f - drawData->DisplayPos.y * imguiPushConstant.scale.y;
+
         // Let ImGui draw here
         //ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
-        ImGuiFrameData& frame = m_VkImGuiFrames[imageIndex];
-
-        ImDrawData* drawData = ImGui::GetDrawData();
-
-        if (!drawData || drawData->TotalVtxCount == 0)
-        {
-            vkCmdEndRenderingKHR(commandBuffer);
-
-            if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-                throw std::runtime_error("failed to record command buffer!");
-            }
-
-            return;
-        }
-
-        size_t vertexSize = drawData->TotalVtxCount * sizeof(ImDrawVert);
-        size_t indexSize = drawData->TotalIdxCount * sizeof(ImDrawIdx);
-
-        void* vtxDst;
-        vkMapMemory(m_VkDevice, frame.vertexBufferMemory, 0, vertexSize, 0, &vtxDst);
-
-        void* idxDst;
-        vkMapMemory(m_VkDevice, frame.indexBufferMemory, 0, indexSize, 0, &idxDst);
-
-        for (int n = 0; n < drawData->CmdListsCount; n++)
-        {
-            const ImDrawList* cmdList = drawData->CmdLists[n];
-            memcpy(vtxDst, cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
-            memcpy(idxDst, cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
-            vtxDst = (char*)vtxDst + cmdList->VtxBuffer.Size * sizeof(ImDrawVert);
-            idxDst = (char*)idxDst + cmdList->IdxBuffer.Size * sizeof(ImDrawIdx);
-        }
-
-        vkUnmapMemory(m_VkDevice, frame.vertexBufferMemory);
-        vkUnmapMemory(m_VkDevice, frame.indexBufferMemory);
+        ImGuiFrameData& frame = m_VkImGuiFrames[m_CurrentFrame];
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkImGuiPipeline);
+
+        vkCmdPushConstants(
+            commandBuffer,
+            m_VkImGuiPipelineLayout,
+            VK_SHADER_STAGE_VERTEX_BIT,
+            0,                          
+            sizeof(ImGuiPushConstant), 
+            &imguiPushConstant 
+        );
 
         VkBuffer vertexBuffers[] = { frame.vertexBuffer };
         VkDeviceSize offsets[] = { 0 };
@@ -1912,9 +1937,36 @@ namespace Enxel
 
             vtxOffset += cmdList->VtxBuffer.Size;
         }
+        
 
         vkCmdEndRenderingKHR(commandBuffer);
-        */
+
+
+        VkImageMemoryBarrier presentBarrier{};
+        presentBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        presentBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+        presentBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        presentBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        presentBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        presentBarrier.image = m_VkSwapChainImages[imageIndex];
+        presentBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        presentBarrier.subresourceRange.baseMipLevel = 0;
+        presentBarrier.subresourceRange.levelCount = 1;
+        presentBarrier.subresourceRange.baseArrayLayer = 0;
+        presentBarrier.subresourceRange.layerCount = 1;
+        presentBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        presentBarrier.dstAccessMask = 0;
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &presentBarrier
+        );
+        
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");
         }

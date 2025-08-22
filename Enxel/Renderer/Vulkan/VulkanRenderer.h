@@ -36,11 +36,19 @@ struct ImGuiVertex {
 	uint32_t col;     
 };
 
+struct ImGuiPushConstant {
+	glm::vec2 scale;
+	glm::vec2 translate;
+};
+
 struct ImGuiFrameData {
 	VkBuffer vertexBuffer;
 	VkDeviceMemory vertexBufferMemory;
+	size_t vertexBufferSize;
 	VkBuffer indexBuffer;
 	VkDeviceMemory indexBufferMemory;
+	size_t indexBufferSize;
+
 };
 
 static VkVertexInputBindingDescription getBindingDescription() {
@@ -143,20 +151,22 @@ private:
 	void CreateImageViews();
 	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
-
-
 	void CreateImGuiGraphicsPipeline();
 	void CreateCommandStructure();
 	void CreateDepthResources();
 	void CreateTextureImage();
 	void CreateTextureImageView();
 	void CreateTextureSampler();
+	void CreateImGuiBuffers();
 	void CreateUniformBuffers();
 	void CreateDescriptorPool();
 	void CreateImGuiDescriptorPool();
 	void CreateDescriptorSets();
 	void CreateImGuiDescriptorSets();
 	void CreateSyncObjects();
+
+
+	void UploadImGuiBuffers(ImDrawData* drawData, uint32_t currentFrame);
 
 	bool IsDeviceSuitable(VkPhysicalDevice device);
 	bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
@@ -176,7 +186,7 @@ private:
 	
 	VkCommandBuffer BeginSingleTimeCommands();
 	void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, ImDrawData* drawData);
 	
 	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
