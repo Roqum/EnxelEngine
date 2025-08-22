@@ -1,12 +1,3 @@
-
-#set_target_properties(SDL3 PROPERTIES
-#    RUNTIME_OUTPUT_DIRECTORY_DEBUG   "${ENXEL_BIN_DEBUG}"
-#    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${ENXEL_BIN_RELEASE}"
-#    LIBRARY_OUTPUT_DIRECTORY_DEBUG   "${ENXEL_BIN_DEBUG}"
-#    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${ENXEL_BIN_RELEASE}"
-#    ARCHIVE_OUTPUT_DIRECTORY_DEBUG   "${ENXEL_BIN_DEBUG}"
-#   ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${ENXEL_BIN_RELEASE}"
-#)
 include(FetchContent)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/Enxel/$<CONFIGURATION>")
@@ -21,3 +12,26 @@ FetchContent_Declare(
     GIT_TAG release-3.2.18  
 )
 FetchContent_MakeAvailable(SDL)
+
+# === imgui ===
+
+set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+
+set(IMGUI_SRC
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_demo.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+)
+
+add_library(imgui STATIC ${IMGUI_SRC})
+
+target_include_directories(imgui PUBLIC
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
+)
+
+# Link SDL3 if you’re using SDL backend
+target_link_libraries(imgui PUBLIC SDL3::SDL3)

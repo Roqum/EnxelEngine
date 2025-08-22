@@ -17,6 +17,7 @@
 
 #include "Vulkan/VulkanBuffer.h"
 #include "VulkanBuffer.h"
+#include <imgui.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -28,6 +29,27 @@ const bool enableValidationLayers = true;
 #endif
 
 constexpr unsigned int FRAME_OVERLAP = 2;
+
+struct ImGuiVertex {
+	glm::vec2 pos;    
+	glm::vec2 uv;     
+	uint32_t col;     
+};
+
+struct ImGuiPushConstant {
+	glm::vec2 scale;
+	glm::vec2 translate;
+};
+
+struct ImGuiFrameData {
+	VkBuffer vertexBuffer;
+	VkDeviceMemory vertexBufferMemory;
+	size_t vertexBufferSize;
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
+	size_t indexBufferSize;
+
+};
 
 static VkVertexInputBindingDescription getBindingDescription() {
 	VkVertexInputBindingDescription bindingDescription{};
@@ -106,7 +128,7 @@ struct RenderCommand
 {
 public:
 	// Inherited via IRenderer
-	void Initialize(SDL_Window* sdlWindow);
+	void Initialize(SDL_Window* sdlWindow, ImGuiContext* imguiContext);
 	virtual void BeginScene() override;
 	virtual void EndScene() override;
 	void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) override;
@@ -117,6 +139,9 @@ public:
 	void StopRendering() override;
 	void Shutdown() override;
 
+	PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
+	PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR;
+
 private:
     void CreateInstance();
     void CreateSurface();
@@ -124,21 +149,24 @@ private:
 	void CreateLogicalDevice();
 	void CreateSwapChain();
 	void CreateImageViews();
-	void CreateRenderPass();
 	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
+	void CreateImGuiGraphicsPipeline();
 	void CreateCommandStructure();
 	void CreateDepthResources();
-	void CreateFramebuffers();
 	void CreateTextureImage();
 	void CreateTextureImageView();
 	void CreateTextureSampler();
-	//void CreateVertexBuffer();
-	//void CreateIndexBuffer();
+	void CreateImGuiBuffers();
 	void CreateUniformBuffers();
 	void CreateDescriptorPool();
+	void CreateImGuiDescriptorPool();
 	void CreateDescriptorSets();
+	void CreateImGuiDescriptorSets();
 	void CreateSyncObjects();
+
+
+	void UploadImGuiBuffers(ImDrawData* drawData, uint32_t currentFrame);
 
 	bool IsDeviceSuitable(VkPhysicalDevice device);
 	bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
@@ -158,7 +186,7 @@ private:
 	
 	VkCommandBuffer BeginSingleTimeCommands();
 	void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, ImDrawData* drawData);
 	
 	void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
@@ -189,13 +217,24 @@ private:
 	VkSwapchainKHR m_VkSwapChain;
 	std::vector<VkImage> m_VkSwapChainImages;
 	std::vector<VkImageView> m_VkSwapChainImageViews;
-	std::vector<VkFramebuffer> m_VkSwapChainFramebuffers;
 
+
+
+	VkDescriptorSet m_ImGuiFontDescriptorSet;
 	VkDescriptorPool m_VkDescriptorPool;
 	VkDescriptorSetLayout m_VkDescriptorSetLayout;
 	VkPipeline m_VkGraphicsPipeline;
-	VkRenderPass m_VkRenderPass;
 	VkPipelineLayout m_VkPipelineLayout;
+
+	VkDescriptorSet m_VkImGuiDescriptorSet;
+	VkDescriptorPool m_VkImGuiDescriptorPool;
+	VkDescriptorSetLayout m_VkImGuiDescriptorSetLayout;
+	VkPipelineLayout m_VkImGuiPipelineLayout;
+	VkPipeline m_VkImGuiPipeline;
+
+	VkSampler m_VkImGuiFontSampler;
+	VkImageView m_VkImGuiFontImageView;
+
 
 	VkCommandPool m_VkTransferCommandPool;
 
@@ -211,12 +250,8 @@ private:
 	VkDeviceMemory m_VkDepthImageMemory;
 	VkImageView m_VkDepthImageView;
 
-	//VkCommandBuffer vkCommandBuffer;
-	//VkSemaphore vkImageAvailableSemaphore;
-	//VkSemaphore vkRenderFinishedSemaphore;
-	//VkFence vkInFlightFence;
-
 	VkFrameData m_VkFrames[FRAME_OVERLAP];
+	ImGuiFrameData m_VkImGuiFrames[FRAME_OVERLAP];
 	uint32_t m_CurrentFrame = 0;
 
 	std::vector<VkCommandBuffer> m_VkCommandBuffers;
@@ -224,7 +259,10 @@ private:
 	std::vector<VkSemaphore> m_VkRenderFinishedSemaphores;
 	std::vector<VkFence> m_VkInFlightFences;
 
-	const std::vector<const char*> m_RequiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	const std::vector<const char*> m_RequiredDeviceExtensions = { 
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME 
+	};
 
 	//Selected Validation Layer
 	const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
