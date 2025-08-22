@@ -18,7 +18,7 @@ Follow instructions on [Vulkan Tutorial](https://vulkan-tutorial.com/Development
 
 1. Clone the repo:
     ```bash
-    git clone git@github.com:Roqum/EnxelEngine.git
+    git clone --recurse-submodule git@github.com:Roqum/EnxelEngine.git
     ```
 2. Open a terminal and navigate to the project directory.
 3. Create and enter a build directory:
