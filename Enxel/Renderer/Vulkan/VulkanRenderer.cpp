@@ -172,7 +172,7 @@ namespace Enxel
         //CreateUIRenderPass();
         CreateDescriptorSetLayout();
         CreateGraphicsPipeline();
-        //CreateImGuiGraphicsPipeline();
+        CreateImGuiGraphicsPipeline();
 	    CreateCommandStructure();
         CreateDepthResources();
         //CreateFramebuffers();
@@ -184,8 +184,8 @@ namespace Enxel
         CreateUniformBuffers();
         CreateDescriptorPool();
         CreateDescriptorSets();
-        //CreateImGuiDescriptorPool();
-        //CreateImGuiDescriptorSets();
+        CreateImGuiDescriptorPool();
+        CreateImGuiDescriptorSets();
         CreateSyncObjects();
 
 
@@ -317,10 +317,10 @@ namespace Enxel
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "Engine Core";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 2, 0);
         appInfo.pEngineName = "Voxine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 2, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_2;
 
         VkInstanceCreateInfo createInstanceInfo{};
         createInstanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -412,22 +412,26 @@ namespace Enxel
         VkPhysicalDeviceFeatures deviceFeatures{};
         deviceFeatures.samplerAnisotropy = VK_TRUE;
 
-        VkPhysicalDeviceVulkan13Features vulkan13Features{};
-        vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-        vulkan13Features.pNext = nullptr;
-        vulkan13Features.dynamicRendering = VK_TRUE;
+        VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature = {};
+        dynamicRenderingFeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+        dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+
+
+        VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
+        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        deviceFeatures2.pNext = &dynamicRenderingFeature;
+
+        vkGetPhysicalDeviceFeatures2(m_VkPhysicalDevice, &deviceFeatures2);
 
         VkDeviceCreateInfo deviceCreateInfo{};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        deviceCreateInfo.pNext = &vulkan13Features;
+        deviceCreateInfo.pNext = &deviceFeatures2;
         deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfosVec.size());
         deviceCreateInfo.pQueueCreateInfos = queueCreateInfosVec.data();
-        deviceCreateInfo.pEnabledFeatures = &deviceFeatures; // This works too when not using features2
+        deviceCreateInfo.pEnabledFeatures = nullptr; 
         deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(m_RequiredDeviceExtensions.size());
         deviceCreateInfo.ppEnabledExtensionNames = m_RequiredDeviceExtensions.data();
-        if (vulkan13Features.dynamicRendering == VK_TRUE) {
-            std::cout << "✓ Dynamic rendering feature is supported (Vulkan 1.3 core)" << std::endl;
-        }
+
         if (enableValidationLayers) {
             deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(m_ValidationLayers.size());
             deviceCreateInfo.ppEnabledLayerNames = m_ValidationLayers.data();
@@ -442,6 +446,16 @@ namespace Enxel
         vkGetDeviceQueue(m_VkDevice, m_VkQueueFamilyIndicies.graphicsFamily.value(), 0, &m_VkGraphicsQueue);
         vkGetDeviceQueue(m_VkDevice, m_VkQueueFamilyIndicies.presentFamily.value(), 0, &m_VkPresentQueue);
         vkGetDeviceQueue(m_VkDevice, m_VkQueueFamilyIndicies.transferFamily.value(), 0, &m_VkTransferQueue);
+
+        vkCmdBeginRenderingKHR =
+            (PFN_vkCmdBeginRenderingKHR)vkGetDeviceProcAddr(m_VkDevice, "vkCmdBeginRenderingKHR");
+
+        vkCmdEndRenderingKHR =
+            (PFN_vkCmdEndRenderingKHR)vkGetDeviceProcAddr(m_VkDevice, "vkCmdEndRenderingKHR");
+
+        if (!vkCmdBeginRenderingKHR || !vkCmdEndRenderingKHR) {
+            throw std::runtime_error("Dynamic rendering extension not available!");
+        }
     }
 
     void VulkanRenderer::CreateSwapChain() {
@@ -705,8 +719,8 @@ namespace Enxel
         depthStencil.back = {}; // Optional
 
 
-        VkPipelineRenderingCreateInfo renderingInfo{};
-        renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO; // Not _KHR suffix
+        VkPipelineRenderingCreateInfoKHR renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR; // Not _KHR suffix
         renderingInfo.pNext = nullptr;
         renderingInfo.colorAttachmentCount = 1;
         renderingInfo.pColorAttachmentFormats = &m_VkSwapChainImageFormat;
@@ -1652,25 +1666,6 @@ namespace Enxel
 
     void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
     {
-        // CRITICAL: Add validation checks before using anything
-        std::cout << "=== Command Buffer Recording Debug ===" << std::endl;
-        std::cout << "Command Buffer: " << (commandBuffer != VK_NULL_HANDLE ? "Valid" : "NULL") << std::endl;
-        std::cout << "Graphics Pipeline: " << (m_VkGraphicsPipeline != VK_NULL_HANDLE ? "Valid" : "NULL") << std::endl;
-        std::cout << "Pipeline Layout: " << (m_VkPipelineLayout != VK_NULL_HANDLE ? "Valid" : "NULL") << std::endl;
-        std::cout << "Image Index: " << imageIndex << std::endl;
-        std::cout << "Depth Image View: " << (m_VkDepthImageView != VK_NULL_HANDLE ? "Valid" : "NULL") << std::endl;
-
-        if (imageIndex >= m_VkSwapChainImageViews.size()) {
-            throw std::runtime_error("Invalid image index: " + std::to_string(imageIndex));
-        }
-
-        std::cout << "Swapchain Image View[" << imageIndex << "]: " << (m_VkSwapChainImageViews[imageIndex] != VK_NULL_HANDLE ? "Valid" : "NULL") << std::endl;
-
-        // Validate pipeline was created successfully
-        if (m_VkGraphicsPipeline == VK_NULL_HANDLE) {
-            throw std::runtime_error("Graphics pipeline is NULL! Pipeline creation must have failed.");
-        }
-
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = 0;
@@ -1680,77 +1675,52 @@ namespace Enxel
             throw std::runtime_error("failed to begin recording command buffer!");
         }
 
-        std::cout << "Command buffer begin successful" << std::endl;
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = m_VkSwapChainImages[imageIndex];
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-        // Image layout transitions before rendering (IMPORTANT!)
-        // Transition swapchain image to color attachment optimal
-        VkImageMemoryBarrier colorBarrier{};
-        colorBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        colorBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED; // or VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-        colorBarrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        colorBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        colorBarrier.image = m_VkSwapChainImages[imageIndex]; // Need the VkImage, not VkImageView
-        colorBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        colorBarrier.subresourceRange.baseMipLevel = 0;
-        colorBarrier.subresourceRange.levelCount = 1;
-        colorBarrier.subresourceRange.baseArrayLayer = 0;
-        colorBarrier.subresourceRange.layerCount = 1;
-        colorBarrier.srcAccessMask = 0;
-        colorBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-        vkCmdPipelineBarrier(commandBuffer,
+        vkCmdPipelineBarrier(
+            commandBuffer,
             VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            0, 0, nullptr, 0, nullptr, 1, &colorBarrier);
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &barrier
+        );
 
-        // Transition depth image to depth attachment optimal (if using depth)
-        if (m_VkDepthImageView != VK_NULL_HANDLE && m_VkDepthImage != VK_NULL_HANDLE) {
-            VkImageMemoryBarrier depthBarrier{};
-            depthBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-            depthBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            depthBarrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-            depthBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            depthBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-            depthBarrier.image = m_VkDepthImage; // Need the VkImage
-            depthBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-            depthBarrier.subresourceRange.baseMipLevel = 0;
-            depthBarrier.subresourceRange.levelCount = 1;
-            depthBarrier.subresourceRange.baseArrayLayer = 0;
-            depthBarrier.subresourceRange.layerCount = 1;
-            depthBarrier.srcAccessMask = 0;
-            depthBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-            vkCmdPipelineBarrier(commandBuffer,
-                VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-                0, 0, nullptr, 0, nullptr, 1, &depthBarrier);
-        }
-
-        std::cout << "Image transitions complete" << std::endl;
-
-        // Color attachment (swapchain image)
-        VkRenderingAttachmentInfo colorAttachment{};
-        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        VkRenderingAttachmentInfoKHR  colorAttachment{};
+        colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
         colorAttachment.pNext = nullptr;
         colorAttachment.imageView = m_VkSwapChainImageViews[imageIndex];
-        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE; // Add this
-        colorAttachment.resolveImageView = VK_NULL_HANDLE;  // Add this
-        colorAttachment.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED; // Add this
+        colorAttachment.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+        colorAttachment.resolveMode = VK_RESOLVE_MODE_NONE; 
+        colorAttachment.resolveImageView = VK_NULL_HANDLE;  
+        colorAttachment.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED; 
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         colorAttachment.clearValue.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
 
-        // Depth attachment (optional - can be nullptr if not using depth)
-        VkRenderingAttachmentInfo depthAttachment{};
-        VkRenderingAttachmentInfo* pDepthAttachment = nullptr;
+
+        VkRenderingAttachmentInfoKHR  depthAttachment{};
+        VkRenderingAttachmentInfoKHR* pDepthAttachment = nullptr;
 
         if (m_VkDepthImageView != VK_NULL_HANDLE) {
-            depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+            depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
             depthAttachment.pNext = nullptr;
             depthAttachment.imageView = m_VkDepthImageView;
-            depthAttachment.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+            depthAttachment.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
             depthAttachment.resolveMode = VK_RESOLVE_MODE_NONE;
             depthAttachment.resolveImageView = VK_NULL_HANDLE;
             depthAttachment.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -1761,8 +1731,8 @@ namespace Enxel
         }
 
         // Rendering info
-        VkRenderingInfo renderingInfo{};
-        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+        VkRenderingInfoKHR  renderingInfo{};
+        renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
         renderingInfo.pNext = nullptr;
         renderingInfo.flags = 0;
         renderingInfo.renderArea.offset = { 0, 0 };
@@ -1774,21 +1744,8 @@ namespace Enxel
         renderingInfo.pDepthAttachment = pDepthAttachment;
         renderingInfo.pStencilAttachment = nullptr;
 
-        std::cout << "Starting dynamic rendering..." << std::endl;
-        vkCmdBeginRendering(commandBuffer, &renderingInfo);
-
-        std::cout << "Binding graphics pipeline..." << std::endl;
-        std::cout << "Pipeline handle value: " << std::hex << (uintptr_t)m_VkGraphicsPipeline << std::dec << std::endl;
-
-        // Double-check the pipeline is valid right before binding
-        if (m_VkGraphicsPipeline == VK_NULL_HANDLE) {
-            vkCmdEndRendering(commandBuffer);
-            throw std::runtime_error("Pipeline became null right before binding!");
-        }
-
+        vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkGraphicsPipeline);
-        std::cout << "Pipeline bound successfully" << std::endl;
-
 
         VkViewport viewport{};
         viewport.x = 0.0f;
@@ -1815,12 +1772,40 @@ namespace Enxel
 
             m_RenderQueue.pop_back();
             vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_VkPipelineLayout, 0, 1, &m_VkFrames[m_CurrentFrame].vkDescriptorSet, 0, nullptr);
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderCommand.indexBuffer->m_Size), 1, 0, 0, 0);
+            uint32_t indexCount = static_cast<uint32_t>(renderCommand.indexBuffer->m_Size / sizeof(uint32_t));
+
+            vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
         }
 
-        vkCmdEndRendering(commandBuffer);
+        vkCmdEndRenderingKHR(commandBuffer);
 
        
+        VkImageMemoryBarrier presentBarrier{};
+        presentBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        presentBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
+        presentBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        presentBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        presentBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        presentBarrier.image = m_VkSwapChainImages[imageIndex];
+        presentBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        presentBarrier.subresourceRange.baseMipLevel = 0;
+        presentBarrier.subresourceRange.levelCount = 1;
+        presentBarrier.subresourceRange.baseArrayLayer = 0;
+        presentBarrier.subresourceRange.layerCount = 1;
+        presentBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        presentBarrier.dstAccessMask = 0;
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+            VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            0,
+            0, nullptr,
+            0, nullptr,
+            1, &presentBarrier
+        );
+
+        /*
 
         // ------------------- UI Rendering -------------------
         VkRenderingAttachmentInfo colorAttribure{};
@@ -1839,7 +1824,7 @@ namespace Enxel
         ImguiRenderingInfo.colorAttachmentCount = 1;
         ImguiRenderingInfo.pColorAttachments = &colorAttribure;
 
-        vkCmdBeginRendering(commandBuffer, &ImguiRenderingInfo);
+        vkCmdBeginRenderingKHR(commandBuffer, &ImguiRenderingInfo);
 
         // Viewport/scissor for UI
         VkViewport viewportUI{};
@@ -1864,7 +1849,7 @@ namespace Enxel
 
         if (!drawData || drawData->TotalVtxCount == 0)
         {
-            vkCmdEndRendering(commandBuffer);
+            vkCmdEndRenderingKHR(commandBuffer);
 
             if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
                 throw std::runtime_error("failed to record command buffer!");
@@ -1928,8 +1913,8 @@ namespace Enxel
             vtxOffset += cmdList->VtxBuffer.Size;
         }
 
-        vkCmdEndRendering(commandBuffer);
-
+        vkCmdEndRenderingKHR(commandBuffer);
+        */
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");
         }

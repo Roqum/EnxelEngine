@@ -131,6 +131,9 @@ public:
 	void StopRendering() override;
 	void Shutdown() override;
 
+	PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
+	PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR;
+
 private:
     void CreateInstance();
     void CreateSurface();
@@ -141,8 +144,6 @@ private:
 	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
 
-	//for debugging only
-	void DebugPipelineInputs();
 
 	void CreateImGuiGraphicsPipeline();
 	void CreateCommandStructure();
@@ -248,7 +249,10 @@ private:
 	std::vector<VkSemaphore> m_VkRenderFinishedSemaphores;
 	std::vector<VkFence> m_VkInFlightFences;
 
-	const std::vector<const char*> m_RequiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	const std::vector<const char*> m_RequiredDeviceExtensions = { 
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME 
+	};
 
 	//Selected Validation Layer
 	const std::vector<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
