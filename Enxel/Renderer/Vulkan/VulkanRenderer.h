@@ -140,6 +140,10 @@ private:
 	void CreateImageViews();
 	void CreateDescriptorSetLayout();
 	void CreateGraphicsPipeline();
+
+	//for debugging only
+	void DebugPipelineInputs();
+
 	void CreateImGuiGraphicsPipeline();
 	void CreateCommandStructure();
 	void CreateDepthResources();
