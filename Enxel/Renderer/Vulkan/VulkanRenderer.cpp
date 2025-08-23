@@ -184,6 +184,9 @@ namespace Enxel
         CreateImGuiDescriptorSets();
         CreateSyncObjects();
 
+#ifdef PROFILING
+        InitializeTimeStampQuery();
+#endif
 
     }
 
@@ -206,7 +209,6 @@ namespace Enxel
     void VulkanRenderer::RenderFrame()
     {
         vkWaitForFences(m_VkDevice, 1, &m_VkFrames[m_CurrentFrame].vkInFlightFence, VK_TRUE, UINT64_MAX);
-
 
         uint32_t imageIndex;
         vkAcquireNextImageKHR(m_VkDevice, m_VkSwapChain, UINT64_MAX, m_VkFrames[m_CurrentFrame].vkImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
@@ -306,6 +308,35 @@ namespace Enxel
 
         SDL_DestroyWindow(m_VkWindow);
     }
+
+#ifdef PROFILING
+    void VulkanRenderer::InitializeTimeStampQuery()
+    {
+        VkQueryPoolCreateInfo queryPoolInfo{};
+        queryPoolInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+        queryPoolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+        queryPoolInfo.queryCount = 2; // start + end
+
+        vkCreateQueryPool(m_VkDevice, &queryPoolInfo, nullptr, &gpuTimeQueryPool);
+    }
+    double VulkanRenderer::GetGPUCycleDuration()
+    {
+        uint64_t timestamps[2];
+        vkGetQueryPoolResults(
+            m_VkDevice,
+            gpuTimeQueryPool,
+            0, 2,
+            sizeof(timestamps),
+            timestamps,
+            sizeof(uint64_t),
+            VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT
+        );
+
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(m_VkPhysicalDevice, &props);
+        return (timestamps[1] - timestamps[0]) * props.limits.timestampPeriod / 1e6;
+    }
+#endif
 
     void VulkanRenderer::CreateInstance()
     {
@@ -1746,6 +1777,10 @@ namespace Enxel
         if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
             throw std::runtime_error("failed to begin recording command buffer!");
         }
+#ifdef PROFILING
+        vkCmdResetQueryPool(commandBuffer, gpuTimeQueryPool, 0, 2);
+        vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, gpuTimeQueryPool, 0);
+#endif
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -1967,6 +2002,11 @@ namespace Enxel
             1, &presentBarrier
         );
         
+
+#ifdef PROFILING
+        vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, gpuTimeQueryPool, 1);
+#endif
+
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");
         }
@@ -2005,7 +2045,6 @@ namespace Enxel
         if (vkAllocateMemory(m_VkDevice, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate image memory!");
         }
-
         vkBindImageMemory(m_VkDevice, image, imageMemory, 0);
     }
 
@@ -2141,7 +2180,7 @@ namespace Enxel
             }
         }
 
-        return VK_PRESENT_MODE_FIFO_KHR;
+        return VK_PRESENT_MODE_IMMEDIATE_KHR;
     }
 
 }
