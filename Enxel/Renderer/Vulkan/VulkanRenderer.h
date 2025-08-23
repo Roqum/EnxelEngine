@@ -142,6 +142,13 @@ public:
 	PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR;
 	PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR;
 
+#ifdef PROFILING
+	void InitializeTimeStampQuery();
+	double GetGPUCycleDuration() override;
+private:
+	VkQueryPool gpuTimeQueryPool;
+#endif
+
 private:
     void CreateInstance();
     void CreateSurface();

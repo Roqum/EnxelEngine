@@ -1,10 +1,12 @@
-file(GLOB  ENXEL_SRC CONFIGURE_DEPENDS 
+file(GLOB_RECURSE ENXEL_SRC CONFIGURE_DEPENDS 
 Enxel.cpp 
 Enxel.h
 Window/*.cpp
 Window/*.h
 World/*.cpp
 World/*.h
+Core/*.h
+Core/*.cpp
 )
 
 
@@ -38,6 +40,15 @@ add_subdirectory(Renderer)
 target_link_libraries(Enxel PUBLIC SDL3::SDL3 glm::glm imgui)
 target_link_libraries(Enxel PRIVATE Renderer PlatformWindow )
 
+
+target_compile_definitions(Enxel PRIVATE
+    $<$<CONFIG:Debug>:PROFILING=1>
+    $<$<CONFIG:Release>:PROFILING=0>
+)
+target_compile_definitions(Renderer PRIVATE
+    $<$<CONFIG:Debug>:PROFILING=1>
+    $<$<CONFIG:Release>:PROFILING=0>
+)
 #target_precompile_headers(Enxel REUSE_FROM pchCommon)
 
 #target_precompile_headers(Enxel INTERFACE ${ENXEL_PCH})

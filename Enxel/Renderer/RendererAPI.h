@@ -26,6 +26,10 @@ namespace Enxel
         virtual void RenderFrame() = 0;
         virtual void Shutdown() = 0;
         virtual void StopRendering() = 0;
+#ifdef PROFILING
+        virtual double GetGPUCycleDuration() = 0;
+#endif
+
 
         virtual VertexBuffer* CreateVertexBuffer(std::vector<Vertex>& verticies) = 0;
         virtual IndexBuffer* CreateIndexBuffer(std::vector<uint32_t>& indices) = 0;

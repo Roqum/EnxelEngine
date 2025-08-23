@@ -11,6 +11,7 @@
 #include <imgui.h>
 #include <imgui_impl_sdl3.h>
 #include <SDL3/SDL_events.h>
+#include "Core/Utility/Timer.h"
 
 namespace Enxel
 {
@@ -41,7 +42,7 @@ namespace Enxel
 
 
 	    World* world = new World();
-        world->Generate(3,3);
+        world->Generate(4,4);
     
 
 	    for (Chunk& chunk : world->chunks)
@@ -54,9 +55,20 @@ namespace Enxel
 	    }
     
 		bool running = true;
+#ifdef PROFILING
+		int currentFrame = 0;
+        const int UI_FRAME_UPDATE_RATE = 10;
+		float totalCycleTime = 0.0f;
+        float cpuCycleTime = 0.0f;
+        float gpuCycleTime = 0.0f;
+
+        Timer timer;
+#endif
         while (running)
         {
-
+#ifdef PROFILING
+            timer.Reset();
+#endif
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
 
@@ -76,14 +88,33 @@ namespace Enxel
             ImGui_ImplSDL3_NewFrame();    
             ImGui::NewFrame();
 
-            ImGui::Begin("Stats");
-            ImGui::Text("FPS: %.1f");
+#ifdef PROFILING
+            ImGui::Begin("Profiling");
+            ImGui::Text("FPS: %.1f", 1000/totalCycleTime);
+            ImGui::Text("Total Cycle Time: %.1f ms", totalCycleTime);
+            ImGui::Text("CPU Cycle Time: %.1f ms", cpuCycleTime);
+            ImGui::Text("GPU Cycle Time: %.1f ms", gpuCycleTime);
+            ImGui::Text("Some more stats will be here soon");
             ImGui::End();
+
+            currentFrame++;
+            if (currentFrame > UI_FRAME_UPDATE_RATE) // dirty but works for now
+            {
+                gpuCycleTime = (float)m_Renderer->GetGPUCycleDuration();
+                cpuCycleTime = timer.GetCurTime();
+            }
+#endif
 
             ImGui::Render();
 
-
             m_Renderer->RenderFrame();
+#ifdef PROFILING
+            if (currentFrame > UI_FRAME_UPDATE_RATE) // dirty but works for now
+            {
+                currentFrame = 0;
+                totalCycleTime = timer.GetCurTime();
+            }
+#endif
         }
 
         m_Window->Cleanup();
