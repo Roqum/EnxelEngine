@@ -10,6 +10,7 @@ file(GLOB_RECURSE Renderer_SRC
 add_library(Renderer STATIC ${Renderer_SRC})
 
 target_include_directories(Renderer PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(Renderer PUBLIC ${ENXEL_DIR})
 
 find_package(Vulkan REQUIRED)
 target_link_libraries(Renderer PUBLIC SDL3::SDL3 Vulkan::Vulkan imgui)

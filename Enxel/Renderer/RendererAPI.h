@@ -3,6 +3,7 @@
 #include "Buffer.h"
 #include <memory>
 #include "imgui.h"
+#include "Camera.h"
 namespace Enxel
 {
 
@@ -20,7 +21,7 @@ namespace Enxel
         static IRenderer* Create();
 
         virtual void Initialize(SDL_Window* sdlWindow, ImGuiContext* imguiContext) = 0;
-        virtual void BeginScene() = 0;
+        virtual void BeginScene(Camera camera) = 0;
         virtual void EndScene() = 0;
         virtual void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) = 0;
         virtual void RenderFrame() = 0;

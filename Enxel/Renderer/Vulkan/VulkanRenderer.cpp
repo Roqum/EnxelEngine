@@ -192,7 +192,7 @@ namespace Enxel
 
   
 
-    void VulkanRenderer::BeginScene()
+    void VulkanRenderer::BeginScene(Camera camera)
     {
     }
 

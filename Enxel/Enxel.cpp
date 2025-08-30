@@ -12,10 +12,28 @@
 #include <imgui_impl_sdl3.h>
 #include <SDL3/SDL_events.h>
 #include "Core/Utility/Timer.h"
+#include "Renderer/Camera.h"
+#include "Core/Event/EventSystem.h"
+#include "Core/Input.h"
 
 namespace Enxel
 {
+	static Enxel* s_EnxelInstance = nullptr;
 
+    Enxel::Enxel()
+    {
+		s_EnxelInstance = this;
+    }
+
+    Enxel::~Enxel()
+    {
+		s_EnxelInstance = nullptr;
+    }
+
+    Enxel& Enxel::Get()
+    {
+        return *s_EnxelInstance;
+    }
 
     void Enxel::StartEngine()
     {
@@ -55,6 +73,9 @@ namespace Enxel
 	    }
     
 		bool running = true;
+        Timer timer;
+		double previousTime = timer.GetCurTime();
+
 #ifdef PROFILING
 		int currentFrame = 0;
         const int UI_FRAME_UPDATE_RATE = 10;
@@ -62,22 +83,27 @@ namespace Enxel
         float cpuCycleTime = 0.0f;
         float gpuCycleTime = 0.0f;
 
-        Timer timer;
 #endif
-        while (running)
+
+		m_Camera = Camera();
+        while (running) // Game loop. Need to be cleaned up and refactored
         {
-#ifdef PROFILING
+            float currentTime = timer.GetCurTime();
+            float elapsedTime = currentTime - previousTime;
+            Update(elapsedTime);
             timer.Reset();
-#endif
-            SDL_Event event;
-            while (SDL_PollEvent(&event)) {
 
-                ImGui_ImplSDL3_ProcessEvent(&event);
+            SDL_Event sdlEvent;
+            while (SDL_PollEvent(&sdlEvent)) {
 
-                if (event.type == SDL_EVENT_QUIT)
+                ImGui_ImplSDL3_ProcessEvent(&sdlEvent);
+
+                if (sdlEvent.type == SDL_EVENT_QUIT)
                 {
                     running = false;
                 }
+
+                
             }
 
             for (Chunk& chunk : world->chunks)
@@ -106,7 +132,7 @@ namespace Enxel
 #endif
 
             ImGui::Render();
-
+            m_Renderer->BeginScene(m_Camera);
             m_Renderer->RenderFrame();
 #ifdef PROFILING
             if (currentFrame > UI_FRAME_UPDATE_RATE) // dirty but works for now
@@ -121,5 +147,11 @@ namespace Enxel
         m_Renderer->Shutdown();
 		world->Shutdown(); // TODO: Bugfix: Device destroyed before vertex/index buffers. Order should be reversed.
         delete world;
+    }
+
+
+    void Enxel::Update(float deltaTime)
+    {
+		m_Camera.OnUpdate(deltaTime);
     }
 }
