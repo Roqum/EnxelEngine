@@ -22,7 +22,7 @@ namespace Enxel
 		inline IndexBuffer* getIndexBuffer() const { return m_IndexBuffer; }
 		
 	private:
-		void GreedyMeshing(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+		void GreedyMeshing(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const std::vector<bool>& mask);
 
 		const WorldSettings& m_Settings;
 

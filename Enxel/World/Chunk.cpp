@@ -37,6 +37,13 @@ namespace Enxel
 		vertices.clear();
 		indices.clear(); 
 
+		std::vector<bool> visibleMaskXPos(m_Settings.ChunkVolume, false);
+		std::vector<bool> visibleMaskXNeg(m_Settings.ChunkVolume, false);
+		std::vector<bool> visibleMaskYPos(m_Settings.ChunkVolume, false);
+		std::vector<bool> visibleMaskYNeg(m_Settings.ChunkVolume, false);
+		std::vector<bool> visibleMaskZPos(m_Settings.ChunkVolume, false);
+		std::vector<bool> visibleMaskZNeg(m_Settings.ChunkVolume, false);
+
 		for (int index = 0; index < m_Settings.ChunkVolume; index++)
 		{
 			int localX, localY, localZ;
@@ -57,96 +64,43 @@ namespace Enxel
 				continue;
 			}
 
-			// Greedy Mesh X axies
-			int meshedXSize = 0;	
-			for (int neighborIndexX = 1; neighborIndexX < (m_Settings.ChunkVolume - localX); neighborIndexX++)
-			{
-				if (voxels[index + neighborIndexX].Type != currentType)
-				{
-					break;
-				}
-				meshedXSize++;
-			}
-
-			// Greedy Mesh Z axies
-			int meshedZSize = 0;
-			for (int meshedX = 0; meshedX < meshedXSize; meshedX++)
-			{
-				bool zRowMeshSucceded = true;
-				for (int neighborIndexZ = 1; neighborIndexZ < (m_Settings.ChunkVolume - localZ); neighborIndexZ++)
-				{
-					if (voxels[toIndex(localX + meshedX, localY, localZ + neighborIndexZ)].Type != currentType)
-					{
-						zRowMeshSucceded = false;
-						break;
-					}
-				}
-				if (!zRowMeshSucceded)
-				{
-					break;
-				}
-
-				meshedZSize++;
-			}
-
-			// Greedy Mesh Y axies
-			int meshedYSize = 0;
-			for (int meshedX = 0; meshedX < meshedXSize; meshedX++)
-			{
-				bool yRowMeshSucceded = true;
-
-				for (int meshedZ = 0; meshedZ < meshedZSize; meshedZ++)
-				{				
-					for (int neighborIndexY = 1; neighborIndexY < (m_Settings.ChunkVolume - localY); neighborIndexY++)
-					{
-						if (voxels[toIndex(localX + meshedX, localY + neighborIndexY, localZ + meshedZ)].Type != currentType)
-						{
-							yRowMeshSucceded = false;
-							break;
-						}
-					}
-					if (!yRowMeshSucceded)
-					{
-						break;
-					}
-				}
-				if (!yRowMeshSucceded)
-				{
-					break;
-				}
-				meshedYSize++;
-			}
-
+			
 
 			if (localY == (m_Settings.ChunkSize - 1) || voxels[toIndex(localX, localY + 1, localZ)].Type == VoxelType::NONE)
 			{
-				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::TOP);
+				visibleMaskYPos[index] = true;
+				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::TOP);
 			}
 			if (localY == 0 || voxels[toIndex(localX, localY - 1, localZ)].Type == VoxelType::NONE)
 			{
-				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::BOTTOM);
+				visibleMaskYNeg[index] = true;
+				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::BOTTOM);
 			}
 			if (localX == (m_Settings.ChunkSize - 1) || voxels[toIndex(localX + 1, localY, localZ)].Type == VoxelType::NONE)
 			{
-				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::RIGHT);
+				visibleMaskXPos[index] = true;	
+				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::RIGHT);
 			}
 			if (localX == 0 || voxels[toIndex(localX - 1, localY, localZ)].Type == VoxelType::NONE)
 			{
-				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::LEFT);
+				visibleMaskXNeg[index] = true;
+				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::LEFT);
 			}
 			if (localZ == (m_Settings.ChunkSize - 1) || voxels[toIndex(localX, localY, localZ + 1)].Type == VoxelType::NONE)
 			{
-				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::FRONT);
+				visibleMaskZPos[index] = true;
+				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::FRONT);
 			}
 			if (localZ == 0 || voxels[toIndex(localX, localY, localZ - 1)].Type == VoxelType::NONE)
 			{
-				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::BACK);
+				visibleMaskZNeg[index] = true;
+				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::BACK);
 			}
 			
 		}
 
-
 	}
+
 	void Chunk::Cleanup()
 	{
 		if (m_VertexBuffer) {
@@ -161,7 +115,80 @@ namespace Enxel
 		}
 		voxels.clear();
 	}
-	void Chunk::GreedyMeshing(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	void Chunk::GreedyMeshing(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const std::vector<bool>& mask)
 	{
+		
+		int meshedXSize = 0;
+
+		for (int index = 0; index < m_Settings.ChunkVolume; index++)
+		{
+			if (!mask[index])
+			{
+				continue;
+			}
+
+
+		}
+
+
+		// Greedy Mesh X axies
+		for (int neighborIndexX = 1; neighborIndexX < (mask); neighborIndexX++)
+		{
+			if (mask[index + neighborIndexX].Type != currentType)
+			{
+				break;
+			}
+			meshedXSize++;
+		}
+
+		// Greedy Mesh Z axies
+		int meshedZSize = 0;
+		for (int meshedX = 0; meshedX < meshedXSize; meshedX++)
+		{
+			bool zRowMeshSucceded = true;
+			for (int neighborIndexZ = 1; neighborIndexZ < (m_Settings.ChunkVolume - localZ); neighborIndexZ++)
+			{
+				if (voxels[toIndex(localX + meshedX, localY, localZ + neighborIndexZ)].Type != currentType)
+				{
+					zRowMeshSucceded = false;
+					break;
+				}
+			}
+			if (!zRowMeshSucceded)
+			{
+				break;
+			}
+
+			meshedZSize++;
+		}
+
+		// Greedy Mesh Y axies
+		int meshedYSize = 0;
+		for (int meshedX = 0; meshedX < meshedXSize; meshedX++)
+		{
+			bool yRowMeshSucceded = true;
+
+			for (int meshedZ = 0; meshedZ < meshedZSize; meshedZ++)
+			{
+				for (int neighborIndexY = 1; neighborIndexY < (m_Settings.ChunkVolume - localY); neighborIndexY++)
+				{
+					if (voxels[toIndex(localX + meshedX, localY + neighborIndexY, localZ + meshedZ)].Type != currentType)
+					{
+						yRowMeshSucceded = false;
+						break;
+					}
+				}
+				if (!yRowMeshSucceded)
+				{
+					break;
+				}
+			}
+			if (!yRowMeshSucceded)
+			{
+				break;
+			}
+			meshedYSize++;
+		}
+
 	}
 }
