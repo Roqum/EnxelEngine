@@ -9,7 +9,7 @@ namespace Enxel
         m_StartTime = std::chrono::high_resolution_clock::now();
         m_StopTime = std::chrono::high_resolution_clock::time_point{};
     }
-    float Timer::GetCurTime() const
+    float Timer::GetCurTimeMs() const
     {
         auto currentTime = std::chrono::high_resolution_clock::now();
         return std::chrono::duration<float, std::chrono::milliseconds::period>(currentTime - m_StartTime).count();

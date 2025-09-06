@@ -192,8 +192,21 @@ namespace Enxel
 
   
 
-    void VulkanRenderer::BeginScene(Camera camera)
+    void VulkanRenderer::BeginScene(Camera* camera)
     {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+        m_uniformBufferCamera.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        m_uniformBufferCamera.model = glm::translate(m_uniformBufferCamera.model, glm::vec3(4.0f, 0.0f, 0.0f));
+
+        m_uniformBufferCamera.view = camera->GetView();
+        m_uniformBufferCamera.proj = camera->GetProjection();
+
+        m_uniformBufferCamera.proj[1][1] *= -1;
+
     }
 
     void VulkanRenderer::EndScene()
@@ -212,7 +225,7 @@ namespace Enxel
 
         uint32_t imageIndex;
         vkAcquireNextImageKHR(m_VkDevice, m_VkSwapChain, UINT64_MAX, m_VkFrames[m_CurrentFrame].vkImageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
-        UpdateUniformBuffer(m_CurrentFrame);
+        memcpy(m_VkFrames[m_CurrentFrame].vkUniformBuffersMapped, &m_uniformBufferCamera, sizeof(m_uniformBufferCamera));
 
         ImDrawData* drawData = ImGui::GetDrawData();
         UploadImGuiBuffers(drawData, m_CurrentFrame);
@@ -1699,26 +1712,7 @@ namespace Enxel
 
     void VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
     {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-        UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        ubo.model = glm::translate(ubo.model, glm::vec3(4.0f, 0.0f, 0.0f));
-
-        ubo.view = glm::lookAt(glm::vec3(60.0f, 60.0f, 60.0f), glm::vec3(16.0f, 16.0f, 16.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-        ubo.proj = glm::perspective(
-            glm::radians(45.0f),
-            m_VkSwapChainExtent.width / (float)m_VkSwapChainExtent.height,
-            0.1f,
-            10000.0f // or larger, depending on scene scale
-        );
-        ubo.proj[1][1] *= -1;
-
-        memcpy(m_VkFrames[currentImage].vkUniformBuffersMapped, &ubo, sizeof(ubo));
+        
     }
 
     VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<char>& byteCode)

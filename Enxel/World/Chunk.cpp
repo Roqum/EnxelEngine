@@ -42,6 +42,10 @@ namespace Enxel
 			int localX, localY, localZ;
 			toCoords(index, localX, localY, localZ);
 
+			VoxelType currentType = voxels[index].Type;
+
+
+
 			glm::vec3 voxelWorldPosition = {
 				m_WorldSpacePosition.x + localX * m_Settings.VoxelSize,
 				m_WorldSpacePosition.y + localY * m_Settings.VoxelSize,
@@ -52,6 +56,68 @@ namespace Enxel
 			{
 				continue;
 			}
+
+			// Greedy Mesh X axies
+			int meshedXSize = 0;	
+			for (int neighborIndexX = 1; neighborIndexX < (m_Settings.ChunkVolume - localX); neighborIndexX++)
+			{
+				if (voxels[index + neighborIndexX].Type != currentType)
+				{
+					break;
+				}
+				meshedXSize++;
+			}
+
+			// Greedy Mesh Z axies
+			int meshedZSize = 0;
+			for (int meshedX = 0; meshedX < meshedXSize; meshedX++)
+			{
+				bool zRowMeshSucceded = true;
+				for (int neighborIndexZ = 1; neighborIndexZ < (m_Settings.ChunkVolume - localZ); neighborIndexZ++)
+				{
+					if (voxels[toIndex(localX + meshedX, localY, localZ + neighborIndexZ)].Type != currentType)
+					{
+						zRowMeshSucceded = false;
+						break;
+					}
+				}
+				if (!zRowMeshSucceded)
+				{
+					break;
+				}
+
+				meshedZSize++;
+			}
+
+			// Greedy Mesh Y axies
+			int meshedYSize = 0;
+			for (int meshedX = 0; meshedX < meshedXSize; meshedX++)
+			{
+				bool yRowMeshSucceded = true;
+
+				for (int meshedZ = 0; meshedZ < meshedZSize; meshedZ++)
+				{				
+					for (int neighborIndexY = 1; neighborIndexY < (m_Settings.ChunkVolume - localY); neighborIndexY++)
+					{
+						if (voxels[toIndex(localX + meshedX, localY + neighborIndexY, localZ + meshedZ)].Type != currentType)
+						{
+							yRowMeshSucceded = false;
+							break;
+						}
+					}
+					if (!yRowMeshSucceded)
+					{
+						break;
+					}
+				}
+				if (!yRowMeshSucceded)
+				{
+					break;
+				}
+				meshedYSize++;
+			}
+
+
 			if (localY == (m_Settings.ChunkSize - 1) || voxels[toIndex(localX, localY + 1, localZ)].Type == VoxelType::NONE)
 			{
 				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::TOP);
@@ -78,6 +144,8 @@ namespace Enxel
 			}
 			
 		}
+
+
 	}
 	void Chunk::Cleanup()
 	{
@@ -92,5 +160,8 @@ namespace Enxel
 			m_IndexBuffer = nullptr;
 		}
 		voxels.clear();
+	}
+	void Chunk::GreedyMeshing(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	{
 	}
 }

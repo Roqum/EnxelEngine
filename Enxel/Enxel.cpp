@@ -56,13 +56,19 @@ namespace Enxel
         
         m_Renderer->Initialize(m_Window->GetSDLWindow(), imguiContext);
 
-        
-
-
+        Timer timer;
 	    World* world = new World();
+
+#ifdef PROFILING
+		float chunkGenStartTime = timer.GetCurTimeMs();
+#endif
         world->Generate(4,4);
     
-
+#ifdef PROFILING
+        float chunkGenInitTime = timer.GetCurTimeMs() - chunkGenStartTime;
+        float verticesAndIndicesStartTime = timer.GetCurTimeMs();
+        int verticesCount = 0;
+#endif
 	    for (Chunk& chunk : world->chunks)
 	    {
             std::vector<Vertex> vertices;
@@ -70,13 +76,13 @@ namespace Enxel
             chunk.draw(vertices, indices);
             chunk.setVertexBuffer(m_Renderer->CreateVertexBuffer(vertices));
             chunk.setIndexBuffer(m_Renderer->CreateIndexBuffer(indices));
-	    }
-    
-		bool running = true;
-        Timer timer;
-		double previousTime = timer.GetCurTime();
-
 #ifdef PROFILING
+			verticesCount += vertices.size();
+#endif
+	    }	
+#ifdef PROFILING
+        float verticesAndIndicesInitTime = timer.GetCurTimeMs() - verticesAndIndicesStartTime;
+
 		int currentFrame = 0;
         const int UI_FRAME_UPDATE_RATE = 10;
 		float totalCycleTime = 0.0f;
@@ -85,10 +91,16 @@ namespace Enxel
 
 #endif
 
-		m_Camera = Camera();
+        m_Camera = Camera();
+		m_CameraController = CameraController(&m_Camera);
+
+        bool running = true;
+        double previousTime = timer.GetCurTimeMs();
         while (running) // Game loop. Need to be cleaned up and refactored
         {
-            float currentTime = timer.GetCurTime();
+            float currentTime = timer.GetCurTimeMs();
+
+			// TODO: delta time is changing based on hardware perfromance. Need to be fixed
             float elapsedTime = currentTime - previousTime;
             Update(elapsedTime);
             timer.Reset();
@@ -116,6 +128,13 @@ namespace Enxel
 
 #ifdef PROFILING
             ImGui::Begin("Profiling");
+            ImGui::Text("Initialization:");
+            ImGui::Text("Vertices: %d:", verticesCount);
+            ImGui::Text("World Generation: %.2f ms", chunkGenInitTime);
+            ImGui::Text("Vertex and Index Initialization: %.2f ms", verticesAndIndicesInitTime);
+            ImGui::Text("");
+
+            ImGui::Text("Game Loop:");
             ImGui::Text("FPS: %.1f", 1000/totalCycleTime);
             ImGui::Text("Total Cycle Time: %.1f ms", totalCycleTime);
             ImGui::Text("CPU Cycle Time: %.1f ms", cpuCycleTime);
@@ -127,18 +146,18 @@ namespace Enxel
             if (currentFrame > UI_FRAME_UPDATE_RATE) // dirty but works for now
             {
                 gpuCycleTime = (float)m_Renderer->GetGPUCycleDuration();
-                cpuCycleTime = timer.GetCurTime();
+                cpuCycleTime = timer.GetCurTimeMs();
             }
 #endif
 
             ImGui::Render();
-            m_Renderer->BeginScene(m_Camera);
+            m_Renderer->BeginScene(&m_Camera);
             m_Renderer->RenderFrame();
 #ifdef PROFILING
             if (currentFrame > UI_FRAME_UPDATE_RATE) // dirty but works for now
             {
                 currentFrame = 0;
-                totalCycleTime = timer.GetCurTime();
+                totalCycleTime = timer.GetCurTimeMs();
             }
 #endif
         }
@@ -152,6 +171,6 @@ namespace Enxel
 
     void Enxel::Update(float deltaTime)
     {
-		m_Camera.OnUpdate(deltaTime);
+		m_CameraController.OnUpdate(deltaTime);
     }
 }

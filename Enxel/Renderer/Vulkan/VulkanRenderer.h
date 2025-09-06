@@ -129,7 +129,7 @@ struct RenderCommand
 public:
 	// Inherited via IRenderer
 	void Initialize(SDL_Window* sdlWindow, ImGuiContext* imguiContext);
-	virtual void BeginScene(Camera camera) override;
+	virtual void BeginScene(Camera* camera) override;
 	virtual void EndScene() override;
 	void Submit(VertexBuffer* vertexBuffer, IndexBuffer* indexBuffer) override;
 
@@ -205,6 +205,8 @@ private:
 	VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 	VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 
+
+	UniformBufferObject m_uniformBufferCamera;
 	std::vector<RenderCommand> m_RenderQueue;
 
 	int m_WindowHeight;	

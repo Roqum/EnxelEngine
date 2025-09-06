@@ -3,7 +3,7 @@
 #include <memory>
 #include "Renderer/RendererAPI.h"
 #include "Renderer/Buffer.h"
-#include "Core/Camera.h"
+#include "Core/CameraController.h"
 #include "Platform/Window/Window.h"
 
 
@@ -37,6 +37,7 @@ namespace Enxel
 	protected:
 		std::unique_ptr<IWindow> m_Window;
 		std::unique_ptr<IRenderer> m_Renderer;
+		CameraController m_CameraController;
 		Camera m_Camera;
 
 		std::unique_ptr<VertexBuffer> m_VertexBuffer;

@@ -13,6 +13,10 @@ namespace Enxel
 
 		void OnUpdate(float deltaTime);
 
+		void MoveForward(float speed);
+		void MoveUp(float speed);
+		void MoveSide(float speed);
+
 
 		const glm::mat4& GetProjection() const { return m_Projection; }
 		const glm::mat4& GetView() const { return m_View; }

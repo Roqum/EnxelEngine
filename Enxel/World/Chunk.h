@@ -22,6 +22,8 @@ namespace Enxel
 		inline IndexBuffer* getIndexBuffer() const { return m_IndexBuffer; }
 		
 	private:
+		void GreedyMeshing(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+
 		const WorldSettings& m_Settings;
 
 		glm::vec3 m_WorldSpacePosition; 

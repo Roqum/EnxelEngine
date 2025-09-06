@@ -10,7 +10,7 @@ namespace Enxel
 		virtual ~Timer() = default;
 
 		void Reset();		
-		float GetCurTime() const;
+		float GetCurTimeMs() const;
 		float GetStartToStopDuration() const;
 		void Stop();
 

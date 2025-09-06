@@ -13,50 +13,36 @@ namespace Enxel
 
 	void Camera::OnUpdate(float deltaTime)
 	{
-		bool moved = false;
 
+	}
+
+	void Camera::MoveForward(float speed)
+	{
 		constexpr glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
 		glm::vec3 rightDirection = glm::cross(m_ForwardDirection, upDirection);
-		float speed = 1.0f;
 
-		// Movement
-		if (Input::IsKeyDown(KeyCode::W))
-		{
-			m_Position += m_ForwardDirection * speed * deltaTime;
-			moved = true;
-		}
-		else if (Input::IsKeyDown(KeyCode::S))
-		{
-			m_Position -= m_ForwardDirection * speed * deltaTime;		
-			moved = true;
-		}
-		if (Input::IsKeyDown(KeyCode::A))
-		{
-			m_Position -= rightDirection * speed * deltaTime;
-			moved = true;
-		}
-		else if (Input::IsKeyDown(KeyCode::D))
-		{
-			m_Position += rightDirection * speed * deltaTime;
-			moved = true;
-		}
-		if (Input::IsKeyDown(KeyCode::Q))
-		{
-			m_Position -= upDirection * speed * deltaTime;
-			moved = true;
-		}
-		else if (Input::IsKeyDown(KeyCode::E))
-		{
-			m_Position += upDirection * speed * deltaTime;
-			moved = true;
-		}
-
-		
-		if (moved)
-		{
-			RecalculateView();
-		}
+		m_Position += m_ForwardDirection * speed;
+		RecalculateView();
 	}
+
+	void Camera::MoveUp(float speed)
+	{
+		constexpr glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
+		glm::vec3 rightDirection = glm::cross(m_ForwardDirection, upDirection);
+
+		m_Position += upDirection * speed;
+		RecalculateView();
+	}
+
+	void Camera::MoveSide(float speed)
+	{
+		constexpr glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
+		glm::vec3 rightDirection = glm::cross(m_ForwardDirection, upDirection);
+
+		m_Position += rightDirection * speed;
+		RecalculateView();
+	}
+
 
 	void Camera::RecalculateView()
 	{
