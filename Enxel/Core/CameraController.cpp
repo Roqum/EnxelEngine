@@ -11,7 +11,7 @@ namespace Enxel
 
 	void CameraController::OnUpdate(float deltaTime)
 	{
-		float speed = 0.2f;
+		float speed = 0.002f;
 
 		// Movement
 		if (Input::IsKeyDown(KeyCode::W))

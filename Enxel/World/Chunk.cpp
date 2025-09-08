@@ -35,7 +35,7 @@ namespace Enxel
 	void Chunk::draw(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 	{
 		vertices.clear();
-		indices.clear(); 
+		indices.clear();
 
 		std::vector<bool> visibleMaskXPos(m_Settings.ChunkVolume, false);
 		std::vector<bool> visibleMaskXNeg(m_Settings.ChunkVolume, false);
@@ -64,7 +64,7 @@ namespace Enxel
 				continue;
 			}
 
-			
+
 
 			if (localY == (m_Settings.ChunkSize - 1) || voxels[toIndex(localX, localY + 1, localZ)].Type == VoxelType::NONE)
 			{
@@ -73,31 +73,39 @@ namespace Enxel
 			}
 			if (localY == 0 || voxels[toIndex(localX, localY - 1, localZ)].Type == VoxelType::NONE)
 			{
-				visibleMaskYNeg[index] = true;
-				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::BOTTOM);
+				//visibleMaskYNeg[index] = true;
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::BOTTOM);
 			}
 			if (localX == (m_Settings.ChunkSize - 1) || voxels[toIndex(localX + 1, localY, localZ)].Type == VoxelType::NONE)
 			{
-				visibleMaskXPos[index] = true;	
-				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::RIGHT);
+				//visibleMaskXPos[index] = true;
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::RIGHT);
 			}
 			if (localX == 0 || voxels[toIndex(localX - 1, localY, localZ)].Type == VoxelType::NONE)
 			{
-				visibleMaskXNeg[index] = true;
-				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::LEFT);
+				//visibleMaskXNeg[index] = true;
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::LEFT);
 			}
 			if (localZ == (m_Settings.ChunkSize - 1) || voxels[toIndex(localX, localY, localZ + 1)].Type == VoxelType::NONE)
 			{
-				visibleMaskZPos[index] = true;
-				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::FRONT);
+				//visibleMaskZPos[index] = true;
+			    voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::FRONT);
 			}
 			if (localZ == 0 || voxels[toIndex(localX, localY, localZ - 1)].Type == VoxelType::NONE)
 			{
-				visibleMaskZNeg[index] = true;
-				//voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::BACK);
+				//visibleMaskZNeg[index] = true;
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, CubeFace::BACK);
 			}
-			
+
 		}
+
+		GreedyMeshing(vertices, indices, visibleMaskYPos, CubeFace::TOP);
+		//GreedyMeshing(vertices, indices, visibleMaskYNeg, CubeFace::BOTTOM);
+		//GreedyMeshing(vertices, indices, visibleMaskXPos, CubeFace::RIGHT);
+		//GreedyMeshing(vertices, indices, visibleMaskXNeg, CubeFace::LEFT);
+		//GreedyMeshing(vertices, indices, visibleMaskZPos, CubeFace::FRONT);
+		//GreedyMeshing(vertices, indices, visibleMaskZNeg, CubeFace::BACK);
+
 
 	}
 
@@ -115,20 +123,140 @@ namespace Enxel
 		}
 		voxels.clear();
 	}
-	void Chunk::GreedyMeshing(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, const std::vector<bool>& mask)
+
+	static int chooseRightIncrementorFirstAxies(const CubeFace& faceSide, const WorldSettings& settings)
 	{
-		
-		int meshedXSize = 0;
+		switch (faceSide)
+		{
+		case CubeFace::TOP:
+		case CubeFace::BOTTOM:
+			return 1; // X direction incrementor
+		case CubeFace::LEFT:
+		case CubeFace::RIGHT:
+			return 1 << settings.ChunkShiftZ; // Z direction incrementor
+		case CubeFace::FRONT:
+		case CubeFace::BACK:
+			return 1; // X direction incrementor
+		default:
+			return 1; // Error
+		}
+	}
+
+	static int chooseRightIncrementorSecondAxies(const CubeFace& faceSide, const WorldSettings& settings)
+	{
+		switch (faceSide)
+		{
+		case CubeFace::TOP:
+		case CubeFace::BOTTOM:
+			return  1 << settings.ChunkShiftZ; // Z direction incrementor
+		case CubeFace::LEFT:
+		case CubeFace::RIGHT:
+			return 1 << settings.ChunkShiftY; // Y direction incrementor
+		case CubeFace::FRONT:
+		case CubeFace::BACK:
+			return 1 << settings.ChunkShiftY; // Y direction incrementor
+		default:
+			return 1; // Error
+		}
+	}
+	void Chunk::GreedyMeshing(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<bool> mask, const CubeFace& faceSide)
+	{
+		// +X -> right, -X -> left 
+		// +Y -> top, -Y -> bottom
+		// +Z -> front, -Z -> back
+		int meshedFirstDirectionSize = 0;
+		int meshedSecondDirectionSize = 0;
+
+		int firstDirectionIncremental = chooseRightIncrementorFirstAxies(faceSide, m_Settings);
+		int secondDirectionIncremental = chooseRightIncrementorSecondAxies(faceSide, m_Settings);
 
 		for (int index = 0; index < m_Settings.ChunkVolume; index++)
 		{
+			int localX, localY, localZ;
+			toCoords(index, localX, localY, localZ);
+
+			glm::vec3 voxelWorldPosition = {
+				m_WorldSpacePosition.x + localX * m_Settings.VoxelSize,
+				m_WorldSpacePosition.y + localY * m_Settings.VoxelSize,
+				m_WorldSpacePosition.z + localZ * m_Settings.VoxelSize
+			};
+
 			if (!mask[index])
 			{
 				continue;
 			}
+			VoxelType meshedType = voxels[index].Type;
+
+			// Greedy Mesh first axies
+			for (int firstDirectionNeighbor = index; firstDirectionNeighbor < m_Settings.ChunkVolume; firstDirectionNeighbor += firstDirectionIncremental)
+			{
+
+				if (!mask[firstDirectionNeighbor] || voxels[firstDirectionNeighbor].Type != meshedType)
+				{
+					break;
+				}
+				meshedFirstDirectionSize++;
+
+			}
+
+			// Greedy Mesh second axies
+			for (int secondDirectionNeighbor = index; secondDirectionNeighbor < m_Settings.ChunkVolume; secondDirectionNeighbor += secondDirectionIncremental)
+			{
+				bool xRowMeshSucceded = true;
+
+				for (int meshedXRowIndex = 0; meshedXRowIndex < meshedFirstDirectionSize; meshedXRowIndex++)
+				{
+					int currentIndex = secondDirectionNeighbor + meshedXRowIndex * firstDirectionIncremental; //toIndex(localX + meshedXRowIndex, secondDirectionNeighbor, localZ);
+					if (currentIndex >= m_Settings.ChunkVolume || !mask[currentIndex] || voxels[currentIndex].Type != meshedType)
+					{
+						xRowMeshSucceded = false;
+						break;
+					}
+				}
+				if (!xRowMeshSucceded)
+				{
+					break;
+				}
+				meshedSecondDirectionSize++;
+			}
 
 
-		}
+			for (int meshedX = 0; meshedX < meshedFirstDirectionSize; meshedX++)
+			{
+				for (int meshedY = 0; meshedY < meshedSecondDirectionSize; meshedY++)
+				{
+					int currentIndex = index + meshedX * firstDirectionIncremental + meshedY * secondDirectionIncremental;
+					mask[currentIndex] = false;
+				}
+			}
+			//meshedXSize++;
+			//meshedYSize++;
+			voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, faceSide, glm::vec2(meshedFirstDirectionSize * m_Settings.VoxelSize, meshedSecondDirectionSize * m_Settings.VoxelSize));
+			/*
+			// Draw Meshed Quad
+			if (faceSide == CubeFace::TOP)
+			{
+			}
+			else if (faceSide == CubeFace::BOTTOM)
+			{
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, faceSide, glm::vec2(meshedXSize * m_Settings.VoxelSize, meshedYSize * m_Settings.VoxelSize));
+			}
+			else if (faceSide == CubeFace::RIGHT)
+			{
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, faceSide, glm::vec2(meshedXSize * m_Settings.VoxelSize, meshedYSize * m_Settings.VoxelSize));
+			}
+			else if (faceSide == CubeFace::LEFT)
+			{
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, faceSide, glm::vec2(meshedXSize * m_Settings.VoxelSize, meshedYSize * m_Settings.VoxelSize));
+			}
+			else if (faceSide == CubeFace::FRONT)
+			{
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, faceSide, glm::vec2(meshedXSize * m_Settings.VoxelSize, meshedYSize * m_Settings.VoxelSize));
+			}
+			else if (faceSide == CubeFace::BACK)
+			{
+				voxels[index].addVoxelFace(vertices, indices, voxelWorldPosition, faceSide, glm::vec2(meshedXSize * m_Settings.VoxelSize, meshedYSize * m_Settings.VoxelSize));
+			}
 
 
 		// Greedy Mesh X axies
@@ -188,6 +316,8 @@ namespace Enxel
 				break;
 			}
 			meshedYSize++;
+		}
+		*/
 		}
 
 	}

@@ -28,6 +28,7 @@ struct Voxel{
 	
 	void addVoxelFace(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, glm::vec3 position, CubeFace cubeFace, float voxelSize = 1.0);
 	
+	void addVoxelFace(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, glm::vec3 position, CubeFace cubeFace, glm::vec2 meshedQuadSize);
 
 };
 
