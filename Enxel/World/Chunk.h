@@ -41,7 +41,7 @@ namespace Enxel
 	inline void toCoords(int idx, int& x, int& y, int& z) {
 		x = idx & m_Settings.ChunkMask;
 		y = (idx >> m_Settings.ChunkShiftY) & m_Settings.ChunkMask;
-		z = idx >> m_Settings.ChunkShiftZ;
+		z = (idx >> m_Settings.ChunkShiftZ);
 	}
 
 	};
